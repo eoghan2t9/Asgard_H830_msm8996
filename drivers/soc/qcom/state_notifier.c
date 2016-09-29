@@ -15,8 +15,9 @@
 #include <linux/fb.h>
 #include <linux/module.h>
 
-#define DEFAULT_SUSPEND_DEFER_TIME 	10
+#define DEFAULT_SUSPEND_DEFER_TIME 	1
 #define DEFAULT_USE_FB_NOTIFIER 	0
+
 #define STATE_NOTIFIER			"state_notifier"
 
 /*
