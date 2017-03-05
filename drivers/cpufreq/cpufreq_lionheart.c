@@ -44,7 +44,7 @@
 #include <linux/slab.h>
 
 #define DEF_FREQUENCY_UP_THRESHOLD		(99)
-#define DEF_FREQUENCY_DOWN_THRESHOLD		(40)
+#define DEF_FREQUENCY_DOWN_THRESHOLD		(45)
 #define MIN_SAMPLING_RATE_RATIO			(2)
 
 static unsigned int min_sampling_rate;
@@ -548,3 +548,6 @@ MODULE_LICENSE("GPL");
 
 fs_initcall(cpufreq_gov_dbs_init);
 module_exit(cpufreq_gov_dbs_exit);
+
+
+
