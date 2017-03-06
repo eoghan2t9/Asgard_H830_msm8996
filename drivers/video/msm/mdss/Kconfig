@@ -282,3 +282,9 @@ config LGE_EXTERNAL_DISPLAY_BLOCK
 	---help---
 	Support EXTERNAL DISPLAY block
 
+config LCD_NOTIFIER
+	bool "Add LCD Notifier"
+	default n
+	---help---
+	all credits to Lord Boeffla
+

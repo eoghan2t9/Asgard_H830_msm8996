@@ -95,7 +95,7 @@ RDIR=$(pwd)
 VER=$(cat "$RDIR/VERSION")
 
 # directory containing cross-compile arm64 toolchain
-TOOLCHAIN=$HOME/build/toolchain/gcc-linaro-6.1.1-2016.08-x86_64_aarch64-linux-gnu
+TOOLCHAIN=$HOME/build/toolchain/aarch64-linux-android-6
 
 CPU_THREADS=$(grep -c "processor" /proc/cpuinfo)
 # amount of cpu threads to use in kernel make process
@@ -109,14 +109,14 @@ ABORT() {
 }
 
 export ARCH=arm64
-export CROSS_COMPILE=$TOOLCHAIN/bin/aarch64-linux-gnu-
+export CROSS_COMPILE=$TOOLCHAIN/bin/aarch64-linux-android-
 
 [ -x "${CROSS_COMPILE}gcc" ] ||
 ABORT "Unable to find gcc cross-compiler at location: ${CROSS_COMPILE}gcc"
 
 [ "$TARGET" ] || TARGET=lge
 [ "$1" ] && DEVICE=$1
-[ "$DEVICE" ] || DEVICE=h830
+[ "$DEVICE" ] || DEVICE=h850
 
 DEFCONFIG=${TARGET}_defconfig
 DEVICE_DEFCONFIG=device_lge_${DEVICE}
