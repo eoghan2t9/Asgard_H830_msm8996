@@ -11,6 +11,13 @@ config ASMP
         help
           Automatically hotplugs the multiple cpu cores on and off based on cpu load and 	   suspend state
 
+config THUNDERPLUG_CONTROL
+	bool "Enable plugging down/up of cores based on load per core"
+	depends on SMP && HOTPLUG_CPU
+	default n
+	help
+	  This driver hotplugs cpu cores based on per-core load
+
 config ZEN_DECISION
 	bool "Zen Decision: MSM Userspace Handler"
 	depends on SMP && FB
