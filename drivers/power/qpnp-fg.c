@@ -7011,7 +7011,7 @@ done:
 		get_sram_prop_now(chip, FG_DATA_BATT_ESR)
 		);
 	cancel_delayed_work(&chip->update_sram_data);
-	schedule_delayed_work(
+	queue_delayed_work(system_power_efficient_wq,
 			      &chip->update_sram_data,
 			      msecs_to_jiffies(0));
 #else
@@ -9189,7 +9189,8 @@ static void fg_soc_level_log(struct work_struct *work)
 	}
 	pr_info("batt_soc_modify : %d, batt_soc_original : %d, voltage : %d\n",
 		batt_soc_modify, batt_soc_original, get_sram_prop_now(chip, FG_DATA_VOLTAGE));
-	schedule_delayed_work(&chip->soc_level_log, 6000);
+	queue_delayed_work(system_power_efficient_wq,
+		&chip->soc_level_log, 6000);
 	return;
 }
 #endif
@@ -9296,7 +9297,8 @@ static int fg_probe(struct spmi_device *spmi)
 #ifdef CONFIG_LGE_PM
 #ifdef CONFIG_LGE_PM_BATT_PROFILE_DEBUG
 	INIT_DELAYED_WORK(&chip->soc_level_log, fg_soc_level_log);
-	schedule_delayed_work(&chip->soc_level_log, 1000);
+	queue_delayed_work(system_power_efficient_wq,
+		&chip->soc_level_log, 1000);
 #endif
 #endif
 	alarm_init(&chip->fg_cap_learning_alarm, ALARM_BOOTTIME,
