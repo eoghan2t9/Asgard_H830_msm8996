@@ -1540,6 +1540,17 @@ static void msm_cpp_do_timeout_work(struct work_struct *work)
 		goto end;
 	}
 
+	for (i = 0; i < queue_len; i++) {
+		processed_frame[i] = cpp_timer.data.processed_frame[i];
+		if (!processed_frame[i]) {
+			pr_warn("process frame null , queue len %d", queue_len);
+			msm_cpp_flush_queue_and_release_buffer(cpp_dev,
+				queue_len);
+			msm_cpp_set_micro_irq_mask(cpp_dev, 1, 0x8);
+			goto end;
+		}
+	}
+
 	atomic_set(&cpp_timer.used, 1);
 	pr_warn("Starting timer to fire in %d ms. (jiffies=%lu)\n",
 		CPP_CMD_TIMEOUT_MS, jiffies);
@@ -1547,9 +1558,6 @@ static void msm_cpp_do_timeout_work(struct work_struct *work)
 		jiffies + msecs_to_jiffies(CPP_CMD_TIMEOUT_MS));
 
 	msm_cpp_set_micro_irq_mask(cpp_dev, 1, 0x8);
-
-	for (i = 0; i < MAX_CPP_PROCESSING_FRAME; i++)
-		processed_frame[i] = cpp_timer.data.processed_frame[i];
 
 	for (i = 0; i < queue_len; i++) {
 		/*LGE_CHANGE S, fix NULL pointer panic while msm_cpp_do_timeout_work, 2016-08-02, Camera-Stability@lge.com*/
