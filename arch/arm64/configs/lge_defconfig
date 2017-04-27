@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/arm64 3.18.31_Asgard_v4 Kernel Configuration
+# Linux/arm64 3.18.31_Asgard_v4.5 Kernel Configuration
 #
 CONFIG_ARM64=y
 CONFIG_64BIT=y
@@ -1295,6 +1295,7 @@ CONFIG_MSM_ULTRASOUND=y
 # CONFIG_GENWQE is not set
 # CONFIG_ECHO is not set
 # CONFIG_CXL_BASE is not set
+CONFIG_FORCE_FAST_CHARGE=y
 
 #
 # SCSI device support
