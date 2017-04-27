@@ -1071,7 +1071,7 @@ int subsystem_restart_dev(struct subsys_device *dev)
 
 	if (disable_restart_work == DISABLE_SSR) {
 		pr_warn("subsys-restart: Ignoring restart request for %s.\n",
-		
+									name);
 		return 0;
 	}
 
