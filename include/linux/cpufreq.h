@@ -515,18 +515,15 @@ extern struct cpufreq_governor cpufreq_gov_conservative;
 #elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_CONSERVATIVEX)
 extern struct cpufreq_governor cpufreq_gov_conservativex;
 #define CPUFREQ_DEFAULT_GOVERNOR (&cpufreq_gov_conservativex)
-#elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_DARKNESS)
-extern struct cpufreq_governor cpufreq_gov_darkness;
-#define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_darkness)
 #define CPUFREQ_DEFAULT_GOVERNOR       (&cpufreq_gov_despair)
 extern struct cpufreq_governor cpufreq_gov_despair;
 #elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_DESPAIR)
+#elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_ELECTROACTIVE)
+extern struct cpufreq_governor cpufreq_gov_electroactive;
+#define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_electroactive)
 #elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_ELECTRODEMAND)
 extern struct cpufreq_governor cpufreq_gov_electrodemand;
 #define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_electrodemand)
-#elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_IMPULSE)
-extern struct cpufreq_governor cpufreq_gov_impulse;
-#define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_impulse)
 #elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_INTELLIDEMAND)
 extern struct cpufreq_governor cpufreq_gov_intellidemand;
 #define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_intellidemand)

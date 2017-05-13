@@ -101,14 +101,19 @@ config CPU_FREQ_DEFAULT_GOV_CONSERVATIVEX
 	help
 	  Use the CPUFreq governor 'conservativex' as default.
 
-config CPU_FREQ_DEFAULT_GOV_DARKNESS
-	bool "darkness"
-	select CPU_FREQ_GOV_DARKNESS
-
 config CPU_FREQ_DEFAULT_GOV_DESPAIR
 	bool "despair"
 	select CPU_FREQ_GOV_DESPAIR
 	help
+
+config CPU_FREQ_DEFAULT_GOV_ELECTROACTIVE
+ 	bool "electroactive"
+ 	select CPU_FREQ_GOV_ELECTROACTIVE
+ 	help
+ 	  Use the CPUFreq governor 'electroactive' as default. This allows
+ 	  you to get a full dynamic cpu frequency capable system by simply
+ 	  loading your cpufreq low-level hardware driver, using the
+	  'electroactive' governor for latency-sensitive workloads.
 
 config CPU_FREQ_DEFAULT_GOV_ELECTRODEMAND
 	bool "electrodemand"
@@ -132,15 +137,6 @@ config CPU_FREQ_DEFAULT_GOV_HYPER
 	select CPU_FREQ_GOV_HYPER
 	---help---
 	  Use the CPUFreq governor 'HYPER' as default.
-
-config CPU_FREQ_DEFAULT_GOV_IMPULSE
-	bool "impulse"
-	select CPU_FREQ_GOV_IMPULSE
-	help
-	  Use the CPUFreq governor 'impulse' as default. This allows
-	  you to get a full dynamic cpu frequency capable system by simply
-	  loading your cpufreq low-level hardware driver, using the
-	  'impulse' governor for latency-sensitive workloads.
 
 config CPU_FREQ_DEFAULT_GOV_INTELLIDEMAND
 	bool "intellidemand"
@@ -333,12 +329,18 @@ config CPU_FREQ_GOV_CONSERVATIVEX
 	help
 	  'conservativex' - less aggressive version of conservative.
 
-config CPU_FREQ_GOV_DARKNESS
-	  tristate "'darkness' cpufreq policy governor"
-
 config CPU_FREQ_GOV_DESPAIR
 	tristate "'despair' cpufreq governor"
 	depends on CPU_FREQ
+
+config CPU_FREQ_GOV_ELECTROACTIVE
+ 	tristate "'electroactive' cpufreq policy governor"
+ 	help
+ 	  'electroactive' - A tweaked "hybrid" based smart and smooth optimized
+            governor designed for optimization in transition and a balance between
+            performance and power.
+ 	
+	  If in doubt, say N.
 
 config CPU_FREQ_GOV_ELECTRODEMAND
 	tristate "'electrodemand' cpufreq policy governor"
@@ -370,14 +372,6 @@ config CPU_FREQ_GOV_HYPER
 	  'HYPER' - a tweaked "ondemand" based smart and smooth optimized governor!
 
 	  If in doubt, say Y
-
-config CPU_FREQ_GOV_IMPULSE
-	tristate "'interactive' cpufreq policy governor"
-	help
-	  'impulse' - This driver adds a dynamic cpufreq policy governor
-	  designed for latency-sensitive workloads.
-
-	  If in doubt, say N.
 
 config CPU_FREQ_GOV_INTELLIDEMAND
         tristate "'intellidemand' cpufreq policy governor"
