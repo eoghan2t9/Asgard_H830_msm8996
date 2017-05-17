@@ -298,7 +298,7 @@ long keyctl_join_session_keyring(const char __user *_name)
 
 		ret = -EPERM;
 		if (name[0] == '.')
-			goto error_name
+			goto error_name;
 	}
 
 	/* join the session */
