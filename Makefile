@@ -1,7 +1,7 @@
 VERSION = 3
 PATCHLEVEL = 18
 SUBLEVEL = 31
-EXTRAVERSION =_Asgard_v5.3
+EXTRAVERSION =_Asgard_v5.4
 NAME = Shuffling Zombie Juror
 
 # *DOCUMENTATION*
