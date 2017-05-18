@@ -57,7 +57,7 @@ config ARM64
 	select HAVE_DMA_ATTRS
 	select HAVE_DMA_CONTIGUOUS
 	select HAVE_DYNAMIC_FTRACE
-	select HAVE_EFFICIENT_UNALIGNED_ACCESS
+	#select HAVE_EFFICIENT_UNALIGNED_ACCESS
 	select HAVE_FTRACE_MCOUNT_RECORD
 	select HAVE_FUNCTION_TRACER
 	select HAVE_FUNCTION_GRAPH_TRACER
@@ -540,16 +540,6 @@ config ARM64_ICACHE_DISABLE
 	  situations.
 
 	  If you are not sure what to do, select 'N' here.
-
-config L1_CACHE_SHIFT
-	int "L1_CACHE_SHIFT"
-	depends on ARCH_MSM8996
-	default 7 if ARCH_MSM8996
-	default 6
-	help
-	  define L1 cache shift here.
-
-	  If unsure, leave the default value.
 
 config MSM_APP_API
 	bool "API support to enable / disable app settings for MSM8996"

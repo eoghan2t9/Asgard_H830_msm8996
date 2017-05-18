@@ -1923,8 +1923,8 @@ cpuset_css_alloc(struct cgroup_subsys_state *parent_css)
 		goto free_requested;
 
 	set_bit(CS_SCHED_LOAD_BALANCE, &cs->flags);
-	cpumask_clear(cs->cpus_allowed)
-	cpumask_clear(cs->cpus_requested);;
+	cpumask_clear(cs->cpus_allowed);
+	cpumask_clear(cs->cpus_requested);
 	nodes_clear(cs->mems_allowed);
 	cpumask_clear(cs->effective_cpus);
 	nodes_clear(cs->effective_mems);
