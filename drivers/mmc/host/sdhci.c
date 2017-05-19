@@ -214,6 +214,8 @@ static void sdhci_dumpregs(struct sdhci_host *host)
 		host->ops->dump_vendor_regs(host);
 	sdhci_dump_state(host);
 	pr_info(DRIVER_NAME ": ===========================================\n");
+	if (host->slot_no == 1)
+		BUG_ON(1);
 }
 
 /*****************************************************************************\
@@ -840,9 +842,20 @@ static u8 sdhci_calc_timeout(struct sdhci_host *host, struct mmc_command *cmd)
 	if (!data)
 		target_timeout = cmd->busy_timeout * 1000;
 	else {
-		target_timeout = data->timeout_ns / 1000;
-		if (host->clock)
-			target_timeout += data->timeout_clks / host->clock;
+		target_timeout = DIV_ROUND_UP(data->timeout_ns, 1000);
+		if (host->clock && data->timeout_clks) {
+			unsigned long long val;
+
+			/*
+			 * data->timeout_clks is in units of clock cycles.
+			 * host->clock is in Hz.  target_timeout is in us.
+			 * Hence, us = 1000000 * cycles / Hz.  Round up.
+			 */
+			val = 1000000ULL * data->timeout_clks;
+			if (do_div(val, host->clock))
+				target_timeout++;
+			target_timeout += val;
+		}
 	}
 
 	/*
@@ -2895,26 +2908,6 @@ static void sdhci_cmd_irq(struct sdhci_host *host, u32 intmask, u32 *mask)
 		    (command != MMC_SEND_TUNING_BLOCK) &&
 		    (command != MMC_SEND_STATUS))
 				host->flags |= SDHCI_NEEDS_RETUNING;
-
-		/*
-		 * If this command initiates a data phase and a response
-		 * CRC error is signalled, the card can start transferring
-		 * data - the card may have received the command without
-		 * error.  We must not terminate the mmc_request early.
-		 *
-		 * If the card did not receive the command or returned an
-		 * error which prevented it sending data, the data phase
-		 * will time out.
-		 *
-		 * Even in case of cmd INDEX OR ENDBIT error we
-		 * handle it the same way.
-		 */
-		if (host->cmd->data &&
-		    (((intmask & (SDHCI_INT_CRC | SDHCI_INT_TIMEOUT)) ==
-		     SDHCI_INT_CRC) || (host->cmd->error == -EILSEQ))) {
-			host->cmd = NULL;
-			return;
-		}
 		tasklet_schedule(&host->finish_tasklet);
 		return;
 	}
@@ -3194,10 +3187,8 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
 
 	if (!host->clock && host->mmc->card &&
 			mmc_card_sdio(host->mmc->card)) {
-		if (!mmc_card_and_host_support_async_int(host->mmc)) {
-			spin_unlock(&host->lock);
+		if (!mmc_card_and_host_support_async_int(host->mmc))
 			return IRQ_NONE;
-		}
 		/*
 		 * async card interrupt is level sensitive and received
 		 * when clocks are off.
@@ -3225,7 +3216,7 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
 
 	do {
 		if (host->mmc->card && mmc_card_cmdq(host->mmc->card) &&
-		!mmc_host_halt(host->mmc) && !mmc_host_cq_disable(host->mmc)) {
+		    !mmc_host_halt(host->mmc)) {
 			pr_debug("*** %s: cmdq intr: 0x%08x\n",
 					mmc_hostname(host->mmc),
 					intmask);
@@ -3474,7 +3465,7 @@ static int sdhci_runtime_pm_put(struct sdhci_host *host)
 
 static void sdhci_runtime_pm_bus_on(struct sdhci_host *host)
 {
-	if (host->runtime_suspended || host->bus_on)
+	if (host->bus_on)
 		return;
 	host->bus_on = true;
 	pm_runtime_get_noresume(host->mmc->parent);
@@ -3482,7 +3473,7 @@ static void sdhci_runtime_pm_bus_on(struct sdhci_host *host)
 
 static void sdhci_runtime_pm_bus_off(struct sdhci_host *host)
 {
-	if (host->runtime_suspended || !host->bus_on)
+	if (!host->bus_on)
 		return;
 	host->bus_on = false;
 	pm_runtime_put_noidle(host->mmc->parent);
@@ -4018,13 +4009,13 @@ int sdhci_add_host(struct sdhci_host *host)
 		if (caps[0] & SDHCI_TIMEOUT_CLK_UNIT)
 			host->timeout_clk *= 1000;
 
+		if (override_timeout_clk)
+			host->timeout_clk = override_timeout_clk;
+
 		mmc->max_busy_timeout = host->ops->get_max_timeout_count ?
 			host->ops->get_max_timeout_count(host) : 1 << 27;
 		mmc->max_busy_timeout /= host->timeout_clk;
 	}
-
-	if (override_timeout_clk)
-		host->timeout_clk = override_timeout_clk;
 
 	mmc->caps |= MMC_CAP_SDIO_IRQ | MMC_CAP_ERASE | MMC_CAP_CMD23;
 	mmc->caps2 |= MMC_CAP2_SDIO_IRQ_NOTHREAD;

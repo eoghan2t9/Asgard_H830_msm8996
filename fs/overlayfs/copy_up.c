@@ -131,7 +131,6 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
 
 	if (!error)
 		error = vfs_fsync(new_file, 0);
-
 	fput(new_file);
 out_fput:
 	fput(old_file);
