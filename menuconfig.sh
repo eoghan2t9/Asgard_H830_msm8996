@@ -5,7 +5,7 @@
 RDIR=$(pwd)
 
 # directory containing cross-compile arm64 toolchain
-TOOLCHAIN=$HOME/build/toolchain/aarch64-linux-android-6.x
+TOOLCHAIN=$HOME/Android/aarch64-linux-android-6.x
 
 export ARCH=arm64
 export CROSS_COMPILE=$TOOLCHAIN/bin/aarch64-linux-android-
