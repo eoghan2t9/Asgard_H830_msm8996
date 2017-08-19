@@ -95,7 +95,7 @@ RDIR=$(pwd)
 VER=$(cat "$RDIR/VERSION")
 
 # directory containing cross-compile arm64 toolchain
-TOOLCHAIN=$HOME/build/toolchain/aarch64-linux-android-6.x
+TOOLCHAIN=$HOME/Android/aarch64-linux-android-6.x
 
 CPU_THREADS=$(grep -c "processor" /proc/cpuinfo)
 # amount of cpu threads to use in kernel make process
