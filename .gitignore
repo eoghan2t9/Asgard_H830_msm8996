@@ -107,4 +107,4 @@ tools/gator/daemon/events_xml.h
 /build/
 
 # Dont Upload Built Kernel
-/AnyKernel/Image.gz-dtb
+# /AnyKernel/Image.gz-dtb
