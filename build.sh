@@ -90,9 +90,11 @@
 # root directory of LGE msm8996 git repo (default is this script's location)
 RDIR=$(pwd)
 
-[ "$VER" ] ||
+# Kernel name
+kernelname=Asguard-Reborn
+
 # version number
-VER=$(cat "$RDIR/VERSION")
+version=6.0
 
 # directory containing cross-compile arm64 toolchain
 TOOLCHAIN=$HOME/Android/aarch64-linux-android-6.x
@@ -128,7 +130,7 @@ ABORT "Config $DEFCONFIG not found in $ARCH configs!"
 ABORT "Device config $DEVICE_DEFCONFIG not found in $ARCH configs!"
 
 KDIR="$RDIR/build/arch/$ARCH/boot"
-export LOCALVERSION=$TARGET-$DEVICE-$VER
+export LOCALVERSION=$TARGET-$DEVICE
 
 CLEAN_BUILD() {
 	echo "Cleaning build..."
@@ -164,10 +166,26 @@ INSTALL_MODULES() {
 	rm build/lib/modules/*/build build/lib/modules/*/source
 }
 
+INCREMENT_VERSION() {
+  declare -a part=( ${1//\./ } )
+  declare    new
+  declare -i carry=1
+
+  for (( CNTR=${#part[@]}-1; CNTR>=0; CNTR-=1 )); do
+    len=${#part[CNTR]}
+    new=$((part[CNTR]+carry))
+    [ ${#new} -gt $len ] && carry=1 || carry=0
+    [ $CNTR -gt 0 ] && part[CNTR]=${new: -len} || part[CNTR]=${new}
+  done
+  new="${part[*]}"
+  echo -e "${new// /.}"
+}
+
 cd "$RDIR" || ABORT "Failed to enter $RDIR!"
 
-CLEAN_BUILD &&
-SETUP_BUILD &&
-BUILD_KERNEL &&
-INSTALL_MODULES &&
-echo "Finished building $LOCALVERSION!"
+#CLEAN_BUILD &&
+#SETUP_BUILD &&
+#BUILD_KERNEL &&
+#INSTALL_MODULES &&
+
+echo "Finished building $kernelname-$LOCALVERSION-v$(INCREMENT_VERSION $version)!"
