@@ -109,4 +109,4 @@ tools/gator/daemon/events_xml.h
 # Dont Upload Built Kernel
 /AnyKernel/Image.gz-dtb
 /AnyKernel/modules/*.ko
-/Anykernel/*.zip
+/AnyKernel/*.zip
