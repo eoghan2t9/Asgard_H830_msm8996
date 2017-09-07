@@ -101,7 +101,7 @@ TOOLCHAIN=$HOME/Android/aarch64-linux-android-6.x
 
 CPU_THREADS=$(grep -c "processor" /proc/cpuinfo)
 # amount of cpu threads to use in kernel make process
-THREADS=$((CPU_THREADS + 1))
+THREADS=`nproc`
 
 ############## SCARY NO-TOUCHY STUFF ###############
 
@@ -181,11 +181,31 @@ INCREMENT_VERSION() {
   echo -e "${new// /.}"
 }
 
+BUILD_ANYKERNEL() {
+
+    echo "Building AnyKernel package"
+    rm AnyKernel/Image.gz-dtb
+    rm AnyKernel/modules/*.ko
+    file=build/arch/arm64/boot/Image.gz-dtb
+    if [ -e "$file" ]; then
+        echo "Finding and adding Image.gz-dtb"
+        find build/ -name 'Image.gz-dtb' -exec cp -v {} AnyKernel/Image.gz-dtb  \;
+        echo "Finding and adding modules"
+        find build/ -name '*.ko' -exec cp -v {} AnyKernel/modules/  \;
+        cd AnyKernel/
+        zip -r "$kernelname"-"$LOCALVERSION"-v"$(INCREMENT_VERSION $version)".zip anykernel.sh Image.gz-dtb META-INF/ tools/ ramdisk/ modules/ patch/
+        cd ../
+    else 
+        echo "File does not exist"
+    fi
+}
+
 cd "$RDIR" || ABORT "Failed to enter $RDIR!"
 
 CLEAN_BUILD &&
 SETUP_BUILD &&
 BUILD_KERNEL &&
 INSTALL_MODULES &&
+BUILD_ANYKERNEL &&
 
 echo "Finished building $kernelname-$LOCALVERSION-v$(INCREMENT_VERSION $version)!"
