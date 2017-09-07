@@ -4,9 +4,9 @@
 ## AnyKernel setup
 # begin properties
 properties() {
-kernel.string=Asgard_Reborn
+kernel.string=Asgard Reborn
 do.devicecheck=1
-do.modules=0
+do.modules=1
 do.cleanup=1
 do.cleanuponabort=0
 device.name1=h830

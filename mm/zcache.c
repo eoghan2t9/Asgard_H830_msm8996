@@ -42,7 +42,7 @@
 /*
  * Enable/disable zcache (disabled by default)
  */
-static bool zcache_enabled __read_mostly;
+static bool zcache_enabled __read_mostly  = 1;
 module_param_named(enabled, zcache_enabled, bool, 0);
 
 /*
