@@ -183,9 +183,9 @@ INCREMENT_VERSION() {
 
 cd "$RDIR" || ABORT "Failed to enter $RDIR!"
 
-#CLEAN_BUILD &&
-#SETUP_BUILD &&
-#BUILD_KERNEL &&
-#INSTALL_MODULES &&
+CLEAN_BUILD &&
+SETUP_BUILD &&
+BUILD_KERNEL &&
+INSTALL_MODULES &&
 
 echo "Finished building $kernelname-$LOCALVERSION-v$(INCREMENT_VERSION $version)!"
