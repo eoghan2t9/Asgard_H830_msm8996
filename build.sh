@@ -91,7 +91,7 @@
 RDIR=$(pwd)
 
 # Kernel name
-KERNELNAME=Asguard-Reborn
+KERNELNAME=Asgard-Reborn
 
 # version number
 VERSION=6.0
