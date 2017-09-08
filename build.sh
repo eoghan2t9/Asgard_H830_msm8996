@@ -91,10 +91,10 @@
 RDIR=$(pwd)
 
 # Kernel name
-kernelname=Asguard-Reborn
+KERNELNAME=Asguard-Reborn
 
 # version number
-version=6.0
+VERSION=6.0
 
 # directory containing cross-compile arm64 toolchain
 TOOLCHAIN=$HOME/Android/aarch64-linux-android-6.x
@@ -130,7 +130,7 @@ ABORT "Config $DEFCONFIG not found in $ARCH configs!"
 ABORT "Device config $DEVICE_DEFCONFIG not found in $ARCH configs!"
 
 KDIR="$RDIR/build/arch/$ARCH/boot"
-export LOCALVERSION=$TARGET-$DEVICE
+export LOCALVERSION=$KERNELNAME-$TARGET-$DEVICE-v$VERSION
 
 CLEAN_BUILD() {
 	echo "Cleaning build..."
@@ -166,21 +166,6 @@ INSTALL_MODULES() {
 	rm build/lib/modules/*/build build/lib/modules/*/source
 }
 
-INCREMENT_VERSION() {
-  declare -a part=( ${1//\./ } )
-  declare    new
-  declare -i carry=1
-
-  for (( CNTR=${#part[@]}-1; CNTR>=0; CNTR-=1 )); do
-    len=${#part[CNTR]}
-    new=$((part[CNTR]+carry))
-    [ ${#new} -gt $len ] && carry=1 || carry=0
-    [ $CNTR -gt 0 ] && part[CNTR]=${new: -len} || part[CNTR]=${new}
-  done
-  new="${part[*]}"
-  echo -e "${new// /.}"
-}
-
 BUILD_ANYKERNEL() {
 
     echo "Building AnyKernel package"
@@ -193,7 +178,7 @@ BUILD_ANYKERNEL() {
         echo "Finding and adding modules"
         find build/ -name '*.ko' -exec cp -v {} AnyKernel/modules/  \;
         cd AnyKernel/
-        zip -r "$kernelname"-"$LOCALVERSION"-v"$(INCREMENT_VERSION $version)".zip anykernel.sh Image.gz-dtb META-INF/ tools/ ramdisk/ modules/ patch/
+        zip -r "$LOCALVERSION".zip anykernel.sh Image.gz-dtb META-INF/ tools/ ramdisk/ modules/ patch/
         cd ../
     else 
         echo "File does not exist"
@@ -208,4 +193,4 @@ BUILD_KERNEL &&
 INSTALL_MODULES &&
 BUILD_ANYKERNEL &&
 
-echo "Finished building $kernelname-$LOCALVERSION-v$(INCREMENT_VERSION $version)!"
+echo "Finished building $LOCALVERSION!"
