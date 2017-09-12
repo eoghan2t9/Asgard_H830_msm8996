@@ -12,6 +12,7 @@ do.cleanuponabort=0
 device.name1=h830
 device.name2=h850
 device.name3=h1
+device.name4=rs988
 } # end properties
 
 # shell variables
