@@ -76,7 +76,6 @@ int dirty_background_ratio = 20;
 int dirty_background_ratio = 5;
 #else
 int dirty_background_ratio = 0;
-#endif
 
 /*
  * dirty_background_bytes starts at 0 (disabled) so that it is a function of
@@ -99,7 +98,7 @@ int vm_dirty_ratio = 50;
 int vm_dirty_ratio = 25;
 #else
 int vm_dirty_ratio = 0;
-#endif
+
 /*
  * vm_dirty_bytes starts at 0 (disabled) so that it is a function of
  * vm_dirty_ratio * the amount of dirtyable memory
