@@ -42,7 +42,7 @@ struct blk_flush_queue;
 #ifdef CONFIG_MACH_LGE
 #if defined (CONFIG_ZEN_INTERACTIVE)
 #define BLKDEV_MAX_RQ	512
-#elif definded (CONFIG_LARGE_DIRTY_BUFFER)
+#elif definded (CONFIG_LARGE_DIRTY_BUFFER
 #define BLKDEV_MAX_RQ	256	/* Default maximum */
 #else
 #define BLKDEV_MAX_RQ	128	/* Default maximum */
