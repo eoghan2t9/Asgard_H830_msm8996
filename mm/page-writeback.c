@@ -70,12 +70,7 @@ static long ratelimit_pages = 32;
 /*
  * Start background writeback (via writeback threads) at this percentage
  */
-#ifdef CONFIG_ZEN_INTERACTIVE
-int dirty_background_ratio = 20;
-#elif CONFIG_LARGE_DIRTY_BUFFER
-int dirty_background_ratio = 5;
-#else
-int dirty_background_ratio = 0;
+int dirty_background_ratio = 10;
 
 /*
  * dirty_background_bytes starts at 0 (disabled) so that it is a function of
@@ -92,12 +87,7 @@ int vm_highmem_is_dirtyable;
 /*
  * The generator of dirty data starts writeback at this percentage
  */
-#ifdef CONFIG_ZEN_INTERACTIVE
-int vm_dirty_ratio = 50;
-#elif CONFIG_LARGE_DIRTY_BUFFER
-int vm_dirty_ratio = 25;
-#else
-int vm_dirty_ratio = 0;
+int vm_dirty_ratio = 20;
 
 /*
  * vm_dirty_bytes starts at 0 (disabled) so that it is a function of
