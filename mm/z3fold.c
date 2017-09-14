@@ -1,9 +1,6 @@
 /*
  * z3fold.c
  *
- * Author: Vitaly Wool <vitaly.wool@konsulko.com>
- * Copyright (C) 2016, Sony Mobile Communications Inc.
- *
  * This implementation is based on zbud written by Seth Jennings.
  *
  * z3fold is an special purpose allocator for storing compressed pages. It
@@ -462,6 +459,11 @@ static void z3fold_free(struct z3fold_pool *pool, unsigned long handle)
 	spin_unlock(&pool->lock);
 }
 
+#ifndef list_last_entry
+#define list_last_entry(ptr, type, member) \
+		       list_entry((ptr)->prev, type, member)
+#endif
+
 /**
  * z3fold_reclaim_page() - evicts allocations from a pool page and frees it
  * @pool:	pool from which a page will attempt to be evicted
@@ -686,28 +688,17 @@ static u64 z3fold_get_pool_size(struct z3fold_pool *pool)
 
 static int z3fold_zpool_evict(struct z3fold_pool *pool, unsigned long handle)
 {
-	if (pool->zpool && pool->zpool_ops && pool->zpool_ops->evict)
-		return pool->zpool_ops->evict(pool->zpool, handle);
-	else
-		return -ENOENT;
+	return zpool_evict(pool, handle);
 }
 
 static const struct z3fold_ops z3fold_zpool_ops = {
 	.evict =	z3fold_zpool_evict
 };
 
-static void *z3fold_zpool_create(const char *name, gfp_t gfp,
-			       const struct zpool_ops *zpool_ops,
-			       struct zpool *zpool)
+static void *z3fold_zpool_create(char *name, gfp_t gfp,
+				struct zpool_ops *zpool_ops)
 {
-	struct z3fold_pool *pool;
-
-	pool = z3fold_create_pool(gfp, zpool_ops ? &z3fold_zpool_ops : NULL);
-	if (pool) {
-		pool->zpool = zpool;
-		pool->zpool_ops = zpool_ops;
-	}
-	return pool;
+	return z3fold_create_pool(gfp, &z3fold_zpool_ops);
 }
 
 static void z3fold_zpool_destroy(void *pool)
