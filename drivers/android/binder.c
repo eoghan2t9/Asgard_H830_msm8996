@@ -3937,10 +3937,6 @@ retry:
 		case BINDER_WORK_TRANSACTION: {
 			binder_inner_proc_unlock(proc);
 			t = container_of(w, struct binder_transaction, work);
-            if(t->from) {
-                task_thread_info(current)->pid = t->from->pid;
-                task_thread_info(current)->tgid = t->from->proc->pid;
-            }
 		} break;
 		case BINDER_WORK_RETURN_ERROR: {
 			struct binder_error *e = container_of(
