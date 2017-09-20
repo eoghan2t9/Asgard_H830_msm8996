@@ -27,6 +27,10 @@ is_slot_device=0;
 ## AnyKernel install
 dump_boot;
 
+# init.lge.rc
+# Disable LGE Root Checker Tool
+replace_file init.lge.rc "0750" "init.lge.rc";
+
 write_boot;
 
 ## end install
