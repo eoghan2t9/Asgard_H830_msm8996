@@ -24,7 +24,6 @@
 #define LOW_TEMP_THRESHOLD 5
 #define HIGH_TEMP_THRESHOLD 45
 #define TEMP_INVALID	0xFFFF
-#define DEFAULT_TEMP 28
 
 /*
  * wsa881x_get_temp - get wsa temperature
