@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2016, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -20,8 +20,18 @@
 #include <media/msm_cam_sensor.h>
 #include "msm_sd.h"
 #include "msm_camera_io_util.h"
-#include "msm_camera_dt_util.h"
 #include "cam_soc_api.h"
+
+#ifdef CONFIG_MACH_LGE
+/* LGE_CHANGE, CST, added csiphy timer for enableing/disable irq */
+#include <linux/timer.h>
+#define CSIPHY_ENABLE_IRQ_TIMEOUT	2000
+
+struct msm_csiphy_timer_t {
+	atomic_t used;
+	struct timer_list timer;
+};	/* LGE_CHANGE, CST, added csiphy timer for enableing/disable irq */
+#endif
 
 #define MAX_CSIPHY 3
 #define CSIPHY_NUM_CLK_MAX  16
@@ -169,9 +179,11 @@ struct csiphy_device {
 	uint8_t num_irq_registers;
 	uint32_t csiphy_sof_debug;
 	uint32_t csiphy_sof_debug_count;
-	struct camera_vreg_t *csiphy_vreg;
-	struct regulator *csiphy_reg_ptr[MAX_REGULATOR];
-	int32_t regulator_count;
+
+#ifdef CONFIG_MACH_LGE
+	struct regulator* csiphy_reg;    /* LGE_CHANGE, CST, added gdsc regulator */
+	struct msm_csiphy_timer_t csiphy_timer;	/* LGE_CHANGE, CST, added csiphy timer */
+#endif
 };
 
 #define VIDIOC_MSM_CSIPHY_RELEASE \

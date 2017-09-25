@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2013-2016, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -17,22 +17,6 @@
 #include "camera.h"
 #include "msm_cci.h"
 #include "msm_camera_dt_util.h"
-
-#include <linux/proc_fs.h>
-bool pdaf_calibration_flag = false;
-uint32_t is_pdaf_supported = 0;
-
-#include <linux/project_info.h>
-struct camera_vendor_match_tbl {
-    char sensor_name[32];
-    char vendor_name[32];
-};
-static struct camera_vendor_match_tbl match_tbl[] = {
-    {"imx298","Sony"},
-    {"imx179","Sony"},
-    {"s5k3p8","Samsung"},
-    {"s5k3p8sp","Samsung"},
-};
 
 /* Logging macro */
 #undef CDBG
@@ -121,11 +105,7 @@ static int32_t msm_sensor_driver_create_i2c_v4l_subdev
 	s_ctrl->msm_sd.sd.entity.name =	s_ctrl->msm_sd.sd.name;
 	s_ctrl->sensordata->sensor_info->session_id = session_id;
 	s_ctrl->msm_sd.close_seq = MSM_SD_CLOSE_2ND_CATEGORY | 0x3;
-	rc = msm_sd_register(&s_ctrl->msm_sd);
-	if (rc < 0) {
-		pr_err("failed: msm_sd_register rc %d", rc);
-		return rc;
-	}
+	msm_sd_register(&s_ctrl->msm_sd);
 	msm_sensor_v4l2_subdev_fops = v4l2_subdev_fops;
 #ifdef CONFIG_COMPAT
 	msm_sensor_v4l2_subdev_fops.compat_ioctl32 =
@@ -162,11 +142,7 @@ static int32_t msm_sensor_driver_create_v4l_subdev
 	s_ctrl->msm_sd.sd.entity.group_id = MSM_CAMERA_SUBDEV_SENSOR;
 	s_ctrl->msm_sd.sd.entity.name = s_ctrl->msm_sd.sd.name;
 	s_ctrl->msm_sd.close_seq = MSM_SD_CLOSE_2ND_CATEGORY | 0x3;
-	rc = msm_sd_register(&s_ctrl->msm_sd);
-	if (rc < 0) {
-		pr_err("failed: msm_sd_register rc %d", rc);
-		return rc;
-	}
+	msm_sd_register(&s_ctrl->msm_sd);
 	msm_cam_copy_v4l2_subdev_fops(&msm_sensor_v4l2_subdev_fops);
 #ifdef CONFIG_COMPAT
 	msm_sensor_v4l2_subdev_fops.compat_ioctl32 =
@@ -204,6 +180,7 @@ static int32_t msm_sensor_fill_eeprom_subdevid_by_name(
 	 * string for eeprom name is valid, set sudev id to -1
 	 *  and try to found new id
 	 */
+	*eeprom_subdev_id = -1;
 
 	if (0 == eeprom_name_len)
 		return 0;
@@ -212,7 +189,6 @@ static int32_t msm_sensor_fill_eeprom_subdevid_by_name(
 	if (!p || !count)
 		return 0;
 
-	*eeprom_subdev_id = -1;
 	count /= sizeof(uint32_t);
 	for (i = 0; i < count; i++) {
 		userspace_probe = 0;
@@ -354,6 +330,136 @@ static int32_t msm_sensor_fill_ois_subdevid_by_name(
 	return rc;
 }
 
+#ifdef CONFIG_MACH_LGE
+static int32_t msm_sensor_fill_tcs_subdevid_by_name(
+				struct msm_sensor_ctrl_t *s_ctrl)
+{
+	int32_t rc = 0;
+	struct device_node *src_node = NULL;
+	uint32_t val = 0;
+	int32_t *tcs_subdev_id;
+	struct  msm_sensor_info_t *sensor_info;
+	struct device_node *of_node = s_ctrl->of_node;
+
+	if (!of_node)
+		return -EINVAL;
+
+	sensor_info = s_ctrl->sensordata->sensor_info;
+	tcs_subdev_id = &sensor_info->subdev_id[SUB_MODULE_TCS];
+	/*
+	 * string for ois name is valid, set sudev id to -1
+	 * and try to found new id
+	 */
+	*tcs_subdev_id = -1;
+
+	src_node = of_parse_phandle(of_node, "qcom,tcs-src", 0);
+	if (!src_node) {
+		CDBG("%s:%d src_node NULL\n", __func__, __LINE__);
+	} else {
+		rc = of_property_read_u32(src_node, "cell-index", &val);
+		CDBG("%s qcom,tcs cell index %d, rc %d\n", __func__,
+			val, rc);
+		if (rc < 0) {
+			pr_err("%s failed %d\n", __func__, __LINE__);
+			return -EINVAL;
+		}
+		*tcs_subdev_id = val;
+		of_node_put(src_node);
+		src_node = NULL;
+	}
+
+	return rc;
+}
+
+/* LGE_CHANGE_S, proxy bring_up, 2015-09-25, seonyung.kim@lge.com */
+static int32_t msm_sensor_fill_proxy_subdevid_by_name(
+				struct msm_sensor_ctrl_t *s_ctrl)
+{
+	int32_t rc = 0;
+	struct device_node *src_node = NULL;
+	uint32_t val = 0;
+	int32_t *proxy_subdev_id;
+	struct  msm_sensor_info_t *sensor_info;
+	struct device_node *of_node = s_ctrl->of_node;
+
+	if (!of_node)
+		return -EINVAL;
+
+	sensor_info = s_ctrl->sensordata->sensor_info;
+	proxy_subdev_id = &sensor_info->subdev_id[SUB_MODULE_PROXY];
+	/*
+	 * string for proxy name is valid, set sudev id to -1
+	 * and try to found new id
+	 */
+	*proxy_subdev_id = -1;
+
+	src_node = of_parse_phandle(of_node, "qcom,proxy-src", 0);
+	if (!src_node) {
+		CDBG("%s:%d src_node NULL\n", __func__, __LINE__);
+	} else {
+		rc = of_property_read_u32(src_node, "cell-index", &val);
+		CDBG("%s qcom,proxy cell index %d, rc %d\n", __func__,
+			val, rc);
+		if (rc < 0) {
+			pr_err("%s failed %d\n", __func__, __LINE__);
+			return -EINVAL;
+		}
+		*proxy_subdev_id = val;
+		of_node_put(src_node);
+		src_node = NULL;
+	}
+
+	return rc;
+}
+
+static int32_t msm_sensor_fill_iris_subdevid_by_name(
+				struct msm_sensor_ctrl_t *s_ctrl)
+{
+	int32_t rc = 0;
+	struct device_node *src_node = NULL;
+	uint32_t val = 0, iris_name_len;
+	int32_t *iris_subdev_id;
+	struct  msm_sensor_info_t *sensor_info;
+	struct device_node *of_node = s_ctrl->of_node;
+
+	if (!s_ctrl->sensordata->iris_name || !of_node)
+		return -EINVAL;
+
+	iris_name_len = strlen(s_ctrl->sensordata->iris_name);
+	if (iris_name_len >= MAX_SENSOR_NAME)
+		return -EINVAL;
+
+	sensor_info = s_ctrl->sensordata->sensor_info;
+	iris_subdev_id = &sensor_info->subdev_id[SUB_MODULE_IRIS];
+	/*
+	 * string for iris name is valid, set sudev id to -1
+	 * and try to found new id
+	 */
+	*iris_subdev_id = -1;
+
+	if (0 == iris_name_len)
+		return 0;
+
+	src_node = of_parse_phandle(of_node, "qcom,iris-src", 0);
+	if (!src_node) {
+		CDBG("%s:%d src_node NULL\n", __func__, __LINE__);
+	} else {
+		rc = of_property_read_u32(src_node, "cell-index", &val);
+		CDBG("%s qcom,iris cell index %d, rc %d\n", __func__,
+			val, rc);
+		if (rc < 0) {
+			pr_err("%s failed %d\n", __func__, __LINE__);
+			return -EINVAL;
+		}
+		*iris_subdev_id = val;
+		of_node_put(src_node);
+		src_node = NULL;
+	}
+
+	return rc;
+}
+#endif
+
 static int32_t msm_sensor_fill_slave_info_init_params(
 	struct msm_camera_sensor_slave_info *slave_info,
 	struct msm_sensor_info_t *sensor_info)
@@ -444,11 +550,17 @@ static int32_t msm_sensor_create_pd_settings(void *setting,
 
 #ifdef CONFIG_COMPAT
 	if (is_compat_task()) {
-		rc = msm_sensor_get_pw_settings_compat(
-			pd, pu, size_down);
-		if (rc < 0) {
-			pr_err("failed");
-			return -EFAULT;
+		int i = 0;
+		struct msm_sensor_power_setting32 *power_setting_iter =
+		(struct msm_sensor_power_setting32 *)compat_ptr((
+		(struct msm_camera_sensor_slave_info32 *)setting)->
+		power_setting_array.power_setting);
+
+		for (i = 0; i < size_down; i++) {
+			pd[i].config_val = power_setting_iter[i].config_val;
+			pd[i].delay = power_setting_iter[i].delay;
+			pd[i].seq_type = power_setting_iter[i].seq_type;
+			pd[i].seq_val = power_setting_iter[i].seq_val;
 		}
 	} else
 #endif
@@ -661,8 +773,6 @@ int32_t msm_sensor_driver_probe(void *setting,
 	struct msm_camera_cci_client        *cci_client = NULL;
 	struct msm_camera_sensor_slave_info *slave_info = NULL;
 	struct msm_camera_slave_info        *camera_info = NULL;
-	uint32_t count = 0,i;
-	enum COMPONENT_TYPE CameraID;
 
 	unsigned long                        mount_pos = 0;
 	uint32_t                             is_yuv;
@@ -710,6 +820,16 @@ int32_t msm_sensor_driver_probe(void *setting,
 		strlcpy(slave_info->flash_name, slave_info32->flash_name,
 			sizeof(slave_info->flash_name));
 
+#ifdef CONFIG_MACH_LGE
+		strlcpy(slave_info->proxy_name, slave_info32->proxy_name,
+			sizeof(slave_info->proxy_name));
+
+		strlcpy(slave_info->tcs_name, slave_info32->tcs_name,
+			sizeof(slave_info->tcs_name));
+
+		strlcpy(slave_info->iris_name, slave_info32->iris_name,
+			sizeof(slave_info->iris_name));
+#endif
 		slave_info->addr_type = slave_info32->addr_type;
 		slave_info->camera_id = slave_info32->camera_id;
 
@@ -786,14 +906,22 @@ int32_t msm_sensor_driver_probe(void *setting,
 		 * and probe already succeeded for that sensor. Ignore this
 		 * probe
 		 */
+#ifdef CONFIG_MACH_LGE
+		if ((slave_info->sensor_id_info.sensor_id ==
+			s_ctrl->sensordata->cam_slave_info->sensor_id_info.sensor_id) &&
+			(slave_info->slave_addr !=
+			s_ctrl->sensordata->cam_slave_info->slave_addr)) {
+			pr_info("%s probe skipped. Module may dualized\n",
+				slave_info->sensor_name);
+			rc = -EINVAL;
+			goto free_slave_info;
+		}
+#endif
 		if (slave_info->sensor_id_info.sensor_id ==
 			s_ctrl->sensordata->cam_slave_info->
-				sensor_id_info.sensor_id &&
-			!(strcmp(slave_info->sensor_name,
-			s_ctrl->sensordata->cam_slave_info->sensor_name))) {
-			pr_err("slot%d: sensor name: %s sensor id%d already probed\n",
+				sensor_id_info.sensor_id) {
+			pr_err("slot%d: sensor id%d already probed\n",
 				slave_info->camera_id,
-				slave_info->sensor_name,
 				s_ctrl->sensordata->cam_slave_info->
 					sensor_id_info.sensor_id);
 			msm_sensor_fill_sensor_info(s_ctrl,
@@ -888,6 +1016,11 @@ CSID_TG:
 	s_ctrl->sensordata->eeprom_name = slave_info->eeprom_name;
 	s_ctrl->sensordata->actuator_name = slave_info->actuator_name;
 	s_ctrl->sensordata->ois_name = slave_info->ois_name;
+#ifdef CONFIG_MACH_LGE
+	s_ctrl->sensordata->proxy_name = slave_info->proxy_name;
+	s_ctrl->sensordata->tcs_name = slave_info->tcs_name;
+	s_ctrl->sensordata->iris_name = slave_info->iris_name;
+#endif
 	/*
 	 * Update eeporm subdevice Id by input eeprom name
 	 */
@@ -911,6 +1044,26 @@ CSID_TG:
 		goto free_camera_info;
 	}
 
+#ifdef CONFIG_MACH_LGE
+	rc = msm_sensor_fill_tcs_subdevid_by_name(s_ctrl);
+	if (rc < 0) {
+		pr_err("%s failed %d\n", __func__, __LINE__);
+		goto free_camera_info;
+	}
+
+	rc = msm_sensor_fill_proxy_subdevid_by_name(s_ctrl);
+	if (rc < 0) {
+		pr_err("%s failed %d\n", __func__, __LINE__);
+		goto free_camera_info;
+	}
+
+	rc = msm_sensor_fill_iris_subdevid_by_name(s_ctrl);
+	if (rc < 0) {
+		pr_err("%s failed %d\n", __func__, __LINE__);
+		goto free_camera_info;
+	}
+#endif
+
 	/* Power up and probe sensor */
 	rc = s_ctrl->func_tbl->sensor_power_up(s_ctrl);
 	if (rc < 0) {
@@ -919,6 +1072,12 @@ CSID_TG:
 	}
 
 	pr_err("%s probe succeeded", slave_info->sensor_name);
+
+	/*
+	  Set probe succeeded flag to 1 so that no other camera shall
+	 * probed on this slot
+	 */
+	s_ctrl->is_probe_succeed = 1;
 
 	/*
 	 * Update the subdevice id of flash-src based on availability in kernel.
@@ -970,30 +1129,8 @@ CSID_TG:
 	/*Save sensor info*/
 	s_ctrl->sensordata->cam_slave_info = slave_info;
 
-	if (0 == slave_info->camera_id)
-		CameraID = R_CAMERA;
-	else
-		CameraID = F_CAMERA;
-	count = ARRAY_SIZE(match_tbl);
-	for (i = 0;i < count;i++) {
-		if (!strcmp(slave_info->sensor_name,match_tbl[i].sensor_name))
-			break;
-	}
-
-	if (i >= count)
-		pr_err("%s,Match camera sensor faild!,current sensor name is %s",
-			__func__,slave_info->sensor_name);
-	else
-		push_component_info(CameraID,match_tbl[i].sensor_name,
-			match_tbl[i].vendor_name);
-
 	msm_sensor_fill_sensor_info(s_ctrl, probed_info, entity_name);
 
-	/*
-	 * Set probe succeeded flag to 1 so that no other camera shall
-	 * probed on this slot
-	 */
-	s_ctrl->is_probe_succeed = 1;
 	return rc;
 
 camera_power_down:
@@ -1116,18 +1253,6 @@ static int32_t msm_sensor_driver_get_dt_data(struct msm_sensor_ctrl_t *s_ctrl)
 	CDBG("%s qcom,mclk-23880000 = %d\n", __func__,
 		s_ctrl->set_mclk_23880000);
 
-	/* Read support-front-camera information */
-	of_property_read_string(of_node, "support-front-camera",
-		&s_ctrl->front_camera_name);
-	CDBG("%s support-front-camera : %s\n", __func__,
-		s_ctrl->front_camera_name);
-
-    if (BACK_CAMERA_B == sensordata->sensor_info->position) {
-      if (0 > of_property_read_u32(of_node, "qcom,pdaf-support", &is_pdaf_supported)) {
-		CDBG("%s:%d Invalid pdaf supported\n", __func__, __LINE__);
-	  }
-	}
-
 	return rc;
 
 FREE_VREG_DATA:
@@ -1162,7 +1287,6 @@ static int32_t msm_sensor_driver_parse(struct msm_sensor_ctrl_t *s_ctrl)
 	if (!s_ctrl->msm_sensor_mutex) {
 		pr_err("failed: no memory msm_sensor_mutex %pK",
 			s_ctrl->msm_sensor_mutex);
-		rc = -ENOMEM;
 		goto FREE_SENSOR_I2C_CLIENT;
 	}
 
@@ -1207,39 +1331,6 @@ FREE_SENSOR_I2C_CLIENT:
 	return rc;
 }
 
-static ssize_t pdaf_proc_read(struct file *filp, char __user *buff,
-                                   size_t len, loff_t *data)
-{
-    char value[2] = {0};
-
-    snprintf(value, sizeof(value), "%d", (is_pdaf_supported << 1 | pdaf_calibration_flag));
-
-    pr_err("%s, is_pdaf_supported=%d,calibration_flag=%d,value=%s\n", __func__,
-          is_pdaf_supported, pdaf_calibration_flag, value);
-    return simple_read_from_buffer(buff, len, data, value,1);
-}
-
-static const struct file_operations pdaf_test_fops = {
-    .owner		= THIS_MODULE,
-    .read		= pdaf_proc_read,
-    //.write		= pdaf_proc_write,
-};
-
-static int msm_sensor_driver_pdaf_proc_init(void)
-{
-	int ret=0;
-	struct proc_dir_entry *proc_entry;
-
-	proc_entry = proc_create_data("pdaf_info", 0666, NULL, &pdaf_test_fops, NULL);
-	if (proc_entry == NULL)
-	{
-		ret = -ENOMEM;
-		pr_err("[%s]: Error! Couldn't create pdaf_calibration proc entry\n", __func__);
-	}
-	return ret;
-}
-
-
 static int32_t msm_sensor_driver_platform_probe(struct platform_device *pdev)
 {
 	int32_t rc = 0;
@@ -1280,8 +1371,6 @@ static int32_t msm_sensor_driver_platform_probe(struct platform_device *pdev)
 
 	/* Fill device in power info */
 	s_ctrl->sensordata->power_info.dev = &pdev->dev;
-	if (BACK_CAMERA_B == s_ctrl->sensordata->sensor_info->position)
-		msm_sensor_driver_pdaf_proc_init();
 	return rc;
 FREE_S_CTRL:
 	kfree(s_ctrl);

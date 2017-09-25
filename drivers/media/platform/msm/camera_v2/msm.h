@@ -29,6 +29,18 @@
 #include <media/videobuf2-dma-contig.h>
 #include <media/msmb_camera.h>
 
+#ifdef CONFIG_MACH_LGE
+/* LGE_CHANGE_S, camera stability task, added  msm-config debugfs*/
+#include <linux/debugfs.h>
+#define LGE_DEBUG_DISABLE_TIMEOUT	1
+#define LGE_DEBUG_PANIC_ON_TIMEOUT	2
+#define LGE_DEBUG_BLOCK_POST_EVENT	7
+#define BIT_SET( x, idx )    ( x |= 1<<(idx&7))
+#define BIT_ISSET( x, idx )  ( x & (1<<(idx&7)))
+#define BIT_CLR( x, idx )    ( x &= ~(1<<(idx&7)))
+/* LGE_CHANGE_E, camera stability task, added  msm-config debugfs*/
+#endif
+
 /* Setting MAX timeout to 6.5seconds considering
  * backend will operate @ .6fps in certain usecases
  * like Long exposure usecase and isp needs max of 2 frames
@@ -110,7 +122,6 @@ struct msm_session {
 	struct mutex lock;
 	struct mutex lock_q;
 	struct mutex close_lock;
-	rwlock_t stream_rwlock;
 };
 
 static inline bool msm_is_daemon_present(void)
@@ -128,13 +139,11 @@ int msm_create_stream(unsigned int session_id,
 void msm_delete_stream(unsigned int session_id, unsigned int stream_id);
 int  msm_create_command_ack_q(unsigned int session_id, unsigned int stream_id);
 void msm_delete_command_ack_q(unsigned int session_id, unsigned int stream_id);
-struct msm_session *msm_get_session(unsigned int session_id);
-struct msm_stream *msm_get_stream(struct msm_session *session,
+struct msm_stream *msm_get_stream(unsigned int session_id,
 	unsigned int stream_id);
 struct vb2_queue *msm_get_stream_vb2q(unsigned int session_id,
 	unsigned int stream_id);
 struct msm_stream *msm_get_stream_from_vb2q(struct vb2_queue *q);
-struct msm_session *msm_get_session_from_vb2q(struct vb2_queue *q);
 struct msm_session *msm_session_find(unsigned int session_id);
 #ifdef CONFIG_COMPAT
 long msm_copy_camera_private_ioctl_args(unsigned long arg,

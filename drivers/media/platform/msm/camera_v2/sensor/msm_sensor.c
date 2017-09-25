@@ -21,7 +21,13 @@
 #undef CDBG
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
 
-bool is_3p8sp = false;
+#if defined(CONFIG_LGE_CAM_PREVIEW_TUNE)
+/* LGE_CHANGE_S, LGE Preview tunning for lowlight, dongjin.ha */
+#define CAM_PREVIEW_TUNE_ON 1
+#define CAM_PREVIEW_TUNE_OFF 0
+extern int pp_set_cam_preview_tune_status(int flag);
+/* LGE_CHANGE_E, LGE Preview tunning for lowlight, dongjin.ha */
+#endif
 
 static void msm_sensor_adjust_mclk(struct msm_camera_power_ctrl_t *ctrl)
 {
@@ -116,7 +122,6 @@ int msm_sensor_power_down(struct msm_sensor_ctrl_t *s_ctrl)
 	enum msm_camera_device_type_t sensor_device_type;
 	struct msm_camera_i2c_client *sensor_i2c_client;
 
-	pr_info ("E\n");
 	if (!s_ctrl) {
 		pr_err("%s:%d failed: s_ctrl %pK\n",
 			__func__, __LINE__, s_ctrl);
@@ -129,12 +134,19 @@ int msm_sensor_power_down(struct msm_sensor_ctrl_t *s_ctrl)
 	power_info = &s_ctrl->sensordata->power_info;
 	sensor_device_type = s_ctrl->sensor_device_type;
 	sensor_i2c_client = s_ctrl->sensor_i2c_client;
+	power_info->cameraID = s_ctrl->id;
 
 	if (!power_info || !sensor_i2c_client) {
 		pr_err("%s:%d failed: power_info %pK sensor_i2c_client %pK\n",
 			__func__, __LINE__, power_info, sensor_i2c_client);
 		return -EINVAL;
 	}
+
+#ifdef CONFIG_MACH_LGE
+	pr_info("%s(%d) %s\n", __func__, __LINE__,
+		s_ctrl->sensordata->sensor_name);
+#endif
+
 	return msm_camera_power_down(power_info, sensor_device_type,
 		sensor_i2c_client);
 }
@@ -147,7 +159,6 @@ int msm_sensor_power_up(struct msm_sensor_ctrl_t *s_ctrl)
 	struct msm_camera_slave_info *slave_info;
 	const char *sensor_name;
 	uint32_t retry = 0;
-	pr_info ("E\n");
 
 	if (!s_ctrl) {
 		pr_err("%s:%d failed: %pK\n",
@@ -189,6 +200,10 @@ int msm_sensor_power_up(struct msm_sensor_ctrl_t *s_ctrl)
 			break;
 		}
 	}
+
+#ifdef CONFIG_MACH_LGE
+	pr_info("%s(%d) %s\n", __func__, __LINE__, sensor_name);
+#endif
 
 	return rc;
 }
@@ -246,13 +261,6 @@ int msm_sensor_match_id(struct msm_sensor_ctrl_t *s_ctrl)
 
 	pr_debug("%s: read id: 0x%x expected id 0x%x:\n",
 			__func__, chipid, slave_info->sensor_id);
-	if(s_ctrl->front_camera_name &&(((!strcmp(s_ctrl->front_camera_name, "IMX179")) && msm_sensor_id_by_mask(s_ctrl, chipid) == S5K3P8) ||
-	    ((!strcmp(s_ctrl->front_camera_name, "S5K3P8")) && msm_sensor_id_by_mask(s_ctrl, chipid) == IMX179))) {
-		pr_err("Support front camera %s, but it is %s. Don't probe.\n",s_ctrl->front_camera_name, sensor_name);
-	    return -ENODEV;
-	}
-	if(chipid == 0x3108 && !is_3p8sp)
-	    chipid += 1;
 	if (msm_sensor_id_by_mask(s_ctrl, chipid) != slave_info->sensor_id) {
 		pr_err("%s chip id %x does not match %x\n",
 				__func__, chipid, slave_info->sensor_id);
@@ -316,14 +324,6 @@ static long msm_sensor_subdev_ioctl(struct v4l2_subdev *sd,
 	if (!s_ctrl) {
 		pr_err("%s s_ctrl NULL\n", __func__);
 		return -EBADF;
-	}
-	if (cmd == 0 && arg == NULL)
-	{
-		pr_err("ftm: power down");
-		return msm_sensor_power_down(s_ctrl);
-	} else if (cmd ==1 && arg == NULL) {
-		pr_err("ftm: power up");
-		return msm_sensor_power_up(s_ctrl);
 	}
 	switch (cmd) {
 	case VIDIOC_MSM_SENSOR_CFG:
@@ -745,6 +745,11 @@ static int msm_sensor_config32(struct msm_sensor_ctrl_t *s_ctrl,
 		kfree(reg_setting);
 		break;
 	}
+#if 1
+		case CFG_POWER_UP_WITHOUT_TCS:
+			s_ctrl->sensordata->power_info.isDualMode = TRUE;
+			//No Break, Continue to CFG_POWER_UP routine
+#endif
 
 	case CFG_POWER_UP:
 		if (s_ctrl->is_csid_tg_mode)
@@ -761,6 +766,9 @@ static int msm_sensor_config32(struct msm_sensor_ctrl_t *s_ctrl,
 				msm_sensor_misc_regulator(s_ctrl, 1);
 
 			rc = s_ctrl->func_tbl->sensor_power_up(s_ctrl);
+		    #if 1
+			s_ctrl->sensordata->power_info.isDualMode = FALSE;
+			#endif
 			if (rc < 0) {
 				pr_err("%s:%d failed rc %d\n", __func__,
 					__LINE__, rc);
@@ -773,12 +781,26 @@ static int msm_sensor_config32(struct msm_sensor_ctrl_t *s_ctrl,
 			rc = -EFAULT;
 		}
 		break;
+#if 1
+			case CFG_POWER_DOWN_WITHOUT_TCS:
+				s_ctrl->sensordata->power_info.isDualMode = TRUE;
+				//No Break, Continue to CFG_POWOER_DOWN routine
+#endif
+
 	case CFG_POWER_DOWN:
 		if (s_ctrl->is_csid_tg_mode)
 			goto DONE;
 
 		kfree(s_ctrl->stop_setting.reg_setting);
 		s_ctrl->stop_setting.reg_setting = NULL;
+
+#if defined(CONFIG_LGE_CAM_PREVIEW_TUNE)
+/* LGE_CHANGE_S, LGE Preview tunning for lowlight, dongjin.ha */
+		pr_err("CAM_PREVIEW_TUNE_OFF\n");
+		pp_set_cam_preview_tune_status(CAM_PREVIEW_TUNE_OFF);
+/* LGE_CHANGE_E, LGE Preview tunning for lowlight, dongjin.ha */
+#endif
+
 		if (s_ctrl->sensor_state != MSM_SENSOR_POWER_UP) {
 			pr_err("%s:%d failed: invalid state %d\n", __func__,
 				__LINE__, s_ctrl->sensor_state);
@@ -790,6 +812,9 @@ static int msm_sensor_config32(struct msm_sensor_ctrl_t *s_ctrl,
 				msm_sensor_misc_regulator(s_ctrl, 0);
 
 			rc = s_ctrl->func_tbl->sensor_power_down(s_ctrl);
+			#if 1
+			s_ctrl->sensordata->power_info.isDualMode = FALSE;
+			#endif
 			if (rc < 0) {
 				pr_err("%s:%d failed rc %d\n", __func__,
 					__LINE__, rc);
@@ -885,6 +910,22 @@ static int msm_sensor_config32(struct msm_sensor_ctrl_t *s_ctrl,
 		}
 		break;
 	}
+	case CFG_SET_PREVIEW_TUNE_ON: {
+/* LGE_CHANGE_S, LGE Preview tunning for lowlight, dongjin.ha */
+#if defined(CONFIG_LGE_CAM_PREVIEW_TUNE)
+	pr_err("CAM_PREVIEW_TUNE_ON\n");
+	pp_set_cam_preview_tune_status(CAM_PREVIEW_TUNE_ON);
+#endif
+	}
+	break;
+	case CFG_SET_PREVIEW_TUNE_OFF: {
+#if defined(CONFIG_LGE_CAM_PREVIEW_TUNE)
+	pr_err("CAM_PREVIEW_TUNE_OFF\n");
+	pp_set_cam_preview_tune_status(CAM_PREVIEW_TUNE_OFF);
+#endif
+	}
+	break;
+/* LGE_CHANGE_E, LGE Preview tunning for lowlight, dongjin.ha */
 
 	default:
 		rc = -EFAULT;
