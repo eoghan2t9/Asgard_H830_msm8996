@@ -288,7 +288,6 @@ static void diag_send_msg_mask_update(uint8_t peripheral, int first, int last)
 	struct diag_mask_info *mask_info = NULL;
 	struct diag_msg_mask_t *mask = NULL;
 	struct diag_ctrl_msg_mask header;
-	uint8_t msg_mask_tbl_count_local;
 
 	if (peripheral >= NUM_PERIPHERALS)
 		return;
@@ -311,8 +310,6 @@ static void diag_send_msg_mask_update(uint8_t peripheral, int first, int last)
 
 	mask = (struct diag_msg_mask_t *)mask_info->ptr;
 	buf = mask_info->update_buf;
-	msg_mask_tbl_count_local = driver->msg_mask_tbl_count;
-	mutex_unlock(&driver->msg_mask_lock);
 	mutex_lock(&mask_info->lock);
 	switch (mask_info->status) {
 	case DIAG_CTRL_MASK_ALL_DISABLED:
@@ -329,11 +326,9 @@ static void diag_send_msg_mask_update(uint8_t peripheral, int first, int last)
 		goto err;
 	}
 
-	for (i = 0; i < msg_mask_tbl_count_local; i++, mask++) {
-		mutex_lock(&driver->msg_mask_lock);
-		if (((mask->ssid_first > first) ||
-			(mask->ssid_last_tools < last)) && first != ALL_SSID) {
-			mutex_unlock(&driver->msg_mask_lock);
+	for (i = 0; i < driver->msg_mask_tbl_count; i++, mask++) {
+		if (((first < mask->ssid_first) ||
+		     (last > mask->ssid_last_tools)) && first != ALL_SSID) {
 			continue;
 		}
 
@@ -374,13 +369,12 @@ proceed:
 		if (mask_size > 0)
 			memcpy(buf + header_len, mask->ptr, mask_size);
 		mutex_unlock(&mask->lock);
-		mutex_unlock(&driver->msg_mask_lock);
 
 		err = diagfwd_write(peripheral, TYPE_CNTL, buf,
 				    header_len + mask_size);
 		if (err && err != -ENODEV)
-			pr_err_ratelimited("diag: Unable to send msg masks to peripheral %d, error = %d\n",
-			       peripheral, err);
+			pr_err_ratelimited("diag: Unable to send msg masks to peripheral %d\n",
+			       peripheral);
 
 		if (first != ALL_SSID)
 			break;
@@ -658,12 +652,8 @@ static int diag_cmd_set_msg_mask(unsigned char *src_buf, int src_len,
 	}
 
 	req = (struct diag_msg_build_mask_t *)src_buf;
-<<<<<<< HEAD
 
-=======
->>>>>>> 1f2a3e1cd24f... diag: Synchronize msg mask read and write on a peripheral
 	mutex_lock(&mask_info->lock);
-	mutex_lock(&driver->msg_mask_lock);
 	mask = (struct diag_msg_mask_t *)mask_info->ptr;
 	for (i = 0; i < driver->msg_mask_tbl_count; i++, mask++) {
 		if (i < (driver->msg_mask_tbl_count - 1)) {
@@ -703,8 +693,6 @@ static int diag_cmd_set_msg_mask(unsigned char *src_buf, int src_len,
 				pr_err_ratelimited("diag: In %s, unable to allocate memory for msg mask ptr, mask_size: %d\n",
 						   __func__, mask_size);
 				mutex_unlock(&mask->lock);
-				mutex_unlock(&driver->msg_mask_lock);
-				mutex_unlock(&mask_info->lock);
 				return -ENOMEM;
 			}
 			mask->ptr = temp;
@@ -723,13 +711,8 @@ static int diag_cmd_set_msg_mask(unsigned char *src_buf, int src_len,
 		mask_info->status = DIAG_CTRL_MASK_VALID;
 		break;
 	}
-<<<<<<< HEAD
 	mutex_unlock(&mask_info->lock);
 
-=======
-	mutex_unlock(&driver->msg_mask_lock);
-	mutex_unlock(&mask_info->lock);
->>>>>>> 1f2a3e1cd24f... diag: Synchronize msg mask read and write on a peripheral
 	if (diag_check_update(APPS_DATA))
 		diag_update_userspace_clients(MSG_MASKS_TYPE);
 
@@ -783,13 +766,8 @@ static int diag_cmd_set_all_msg_mask(unsigned char *src_buf, int src_len,
 
 	req = (struct diag_msg_config_rsp_t *)src_buf;
 
-<<<<<<< HEAD
-=======
-	mutex_lock(&mask_info->lock);
-	mutex_lock(&driver->msg_mask_lock);
-
->>>>>>> 1f2a3e1cd24f... diag: Synchronize msg mask read and write on a peripheral
 	mask = (struct diag_msg_mask_t *)mask_info->ptr;
+	mutex_lock(&mask_info->lock);
 	mask_info->status = (req->rt_mask) ? DIAG_CTRL_MASK_ALL_ENABLED :
 					   DIAG_CTRL_MASK_ALL_DISABLED;
 	for (i = 0; i < driver->msg_mask_tbl_count; i++, mask++) {
@@ -798,10 +776,6 @@ static int diag_cmd_set_all_msg_mask(unsigned char *src_buf, int src_len,
 		       mask->range * sizeof(uint32_t));
 		mutex_unlock(&mask->lock);
 	}
-<<<<<<< HEAD
-=======
-	mutex_unlock(&driver->msg_mask_lock);
->>>>>>> 1f2a3e1cd24f... diag: Synchronize msg mask read and write on a peripheral
 	mutex_unlock(&mask_info->lock);
 
 	if (diag_check_update(APPS_DATA))
@@ -1307,7 +1281,6 @@ static int diag_create_msg_mask_table(void)
 	struct diag_ssid_range_t range;
 
 	mutex_lock(&msg_mask.lock);
-	mutex_lock(&driver->msg_mask_lock);
 	driver->msg_mask_tbl_count = MSG_MASK_TBL_CNT;
 	for (i = 0; i < driver->msg_mask_tbl_count; i++, mask++) {
 		range.ssid_first = msg_mask_tbl[i].ssid_first;
@@ -1316,10 +1289,6 @@ static int diag_create_msg_mask_table(void)
 		if (err)
 			break;
 	}
-<<<<<<< HEAD
-=======
-	mutex_unlock(&driver->msg_mask_lock);
->>>>>>> 1f2a3e1cd24f... diag: Synchronize msg mask read and write on a peripheral
 	mutex_unlock(&msg_mask.lock);
 	return err;
 }
@@ -1334,11 +1303,6 @@ static int diag_create_build_time_mask(void)
 	struct diag_ssid_range_t range;
 
 	mutex_lock(&msg_bt_mask.lock);
-<<<<<<< HEAD
-=======
-	mutex_lock(&driver->msg_mask_lock);
-	driver->bt_msg_mask_tbl_count = MSG_MASK_TBL_CNT;
->>>>>>> 1f2a3e1cd24f... diag: Synchronize msg mask read and write on a peripheral
 	build_mask = (struct diag_msg_mask_t *)msg_bt_mask.ptr;
 	for (i = 0; i < driver->msg_mask_tbl_count; i++, build_mask++) {
 		range.ssid_first = msg_mask_tbl[i].ssid_first;
@@ -1450,13 +1414,8 @@ static int diag_create_build_time_mask(void)
 		}
 		memcpy(build_mask->ptr, tbl, tbl_size);
 	}
-<<<<<<< HEAD
 	mutex_unlock(&msg_bt_mask.lock);
 
-=======
-	mutex_unlock(&driver->msg_mask_lock);
-	mutex_unlock(&msg_bt_mask.lock);
->>>>>>> 1f2a3e1cd24f... diag: Synchronize msg mask read and write on a peripheral
 	return err;
 }
 
@@ -1625,12 +1584,8 @@ int diag_msg_mask_copy(struct diag_mask_info *dest, struct diag_mask_info *src)
 	err = __diag_mask_init(dest, MSG_MASK_SIZE, APPS_BUF_SIZE);
 	if (err)
 		return err;
-<<<<<<< HEAD
 
-=======
->>>>>>> 1f2a3e1cd24f... diag: Synchronize msg mask read and write on a peripheral
 	mutex_lock(&dest->lock);
-	mutex_lock(&driver->msg_mask_lock);
 	src_mask = (struct diag_msg_mask_t *)src->ptr;
 	dest_mask = (struct diag_msg_mask_t *)dest->ptr;
 
@@ -1647,13 +1602,8 @@ int diag_msg_mask_copy(struct diag_mask_info *dest, struct diag_mask_info *src)
 		src_mask++;
 		dest_mask++;
 	}
-<<<<<<< HEAD
 	mutex_unlock(&dest->lock);
 
-=======
-	mutex_unlock(&driver->msg_mask_lock);
-	mutex_unlock(&dest->lock);
->>>>>>> 1f2a3e1cd24f... diag: Synchronize msg mask read and write on a peripheral
 	return err;
 }
 
@@ -1664,24 +1614,15 @@ void diag_msg_mask_free(struct diag_mask_info *mask_info)
 
 	if (!mask_info)
 		return;
-<<<<<<< HEAD
 
-=======
->>>>>>> 1f2a3e1cd24f... diag: Synchronize msg mask read and write on a peripheral
 	mutex_lock(&mask_info->lock);
-	mutex_lock(&driver->msg_mask_lock);
 	mask = (struct diag_msg_mask_t *)mask_info->ptr;
 	for (i = 0; i < driver->msg_mask_tbl_count; i++, mask++) {
 		kfree(mask->ptr);
 		mask->ptr = NULL;
 	}
-<<<<<<< HEAD
 	mutex_unlock(&mask_info->lock);
 
-=======
-	mutex_unlock(&driver->msg_mask_lock);
-	mutex_unlock(&mask_info->lock);
->>>>>>> 1f2a3e1cd24f... diag: Synchronize msg mask read and write on a peripheral
 	__diag_mask_exit(mask_info);
 }
 
@@ -1838,20 +1779,7 @@ int diag_copy_to_user_msg_mask(char __user *buf, size_t count,
 	if (!mask_info)
 		return -EIO;
 
-<<<<<<< HEAD
-=======
-	mutex_lock(&driver->diag_maskclear_mutex);
-	if (driver->mask_clear) {
-		DIAG_LOG(DIAG_DEBUG_PERIPHERALS,
-		"diag:%s: count = %zu\n", __func__, count);
-		mutex_unlock(&driver->diag_maskclear_mutex);
-		return -EIO;
-	}
-	mutex_unlock(&driver->diag_maskclear_mutex);
->>>>>>> 1f2a3e1cd24f... diag: Synchronize msg mask read and write on a peripheral
 	mutex_lock(&mask_info->lock);
-	mutex_lock(&driver->msg_mask_lock);
-
 	mask = (struct diag_msg_mask_t *)(mask_info->ptr);
 	for (i = 0; i < driver->msg_mask_tbl_count; i++, mask++) {
 		ptr = mask_info->update_buf;
@@ -1888,13 +1816,8 @@ int diag_copy_to_user_msg_mask(char __user *buf, size_t count,
 		}
 		total_len += len;
 	}
-<<<<<<< HEAD
 	mutex_unlock(&mask_info->lock);
 
-=======
-	mutex_unlock(&driver->msg_mask_lock);
-	mutex_unlock(&mask_info->lock);
->>>>>>> 1f2a3e1cd24f... diag: Synchronize msg mask read and write on a peripheral
 	return err ? err : total_len;
 }
 
