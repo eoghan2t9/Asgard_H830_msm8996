@@ -758,3 +758,10 @@ config LGE_ADAPTIVE_READAHEAD
 	help
 	  lge adaptive readahead set enable
 
+config LARGE_DIRTY_BUFFER
+	bool "Use large dirty_threshold value"
+	default n
+	help
+	  If unsure, say N to use kernel default value
+
+
