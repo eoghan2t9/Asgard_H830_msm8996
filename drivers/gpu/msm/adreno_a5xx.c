@@ -1,4 +1,4 @@
-/* Copyright (c) 2014-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2014-2017, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -244,12 +244,13 @@ static int a5xx_critical_packet_construct(struct adreno_device *adreno_dev)
 
 	ret = kgsl_allocate_global(&adreno_dev->dev,
 					&crit_pkts, PAGE_SIZE,
-					KGSL_MEMFLAGS_GPUREADONLY, 0);
+					KGSL_MEMFLAGS_GPUREADONLY,
+					0, "crit_pkts");
 	if (ret)
 		return ret;
 
 	ret = kgsl_allocate_user(&adreno_dev->dev, &crit_pkts_refbuf0,
-					NULL, PAGE_SIZE, KGSL_MEMFLAGS_SECURE);
+		PAGE_SIZE, KGSL_MEMFLAGS_SECURE);
 	if (ret)
 		return ret;
 
@@ -258,19 +259,19 @@ static int a5xx_critical_packet_construct(struct adreno_device *adreno_dev)
 
 	ret = kgsl_allocate_global(&adreno_dev->dev,
 					&crit_pkts_refbuf1,
-					PAGE_SIZE, 0, 0);
+					PAGE_SIZE, 0, 0, "crit_pkts_refbuf1");
 	if (ret)
 		return ret;
 
 	ret = kgsl_allocate_global(&adreno_dev->dev,
 					&crit_pkts_refbuf2,
-					PAGE_SIZE, 0, 0);
+					PAGE_SIZE, 0, 0, "crit_pkts_refbuf2");
 	if (ret)
 		return ret;
 
 	ret = kgsl_allocate_global(&adreno_dev->dev,
 					&crit_pkts_refbuf3,
-					PAGE_SIZE, 0, 0);
+					PAGE_SIZE, 0, 0, "crit_pkts_refbuf3");
 	if (ret)
 		return ret;
 
@@ -1843,11 +1844,11 @@ static void a5xx_start(struct adreno_device *adreno_dev)
 		set_bit(ADRENO_DEVICE_HANG_INTR, &adreno_dev->priv);
 		gpudev->irq->mask |= (1 << A5XX_INT_MISC_HANG_DETECT);
 		/*
-		 * Set hang detection threshold to 4 million cycles
-		 * (0x3FFFF*16)
+		 * Set hang detection threshold to 1 million cycles
+		 * (0xFFFF*16)
 		 */
 		kgsl_regwrite(device, A5XX_RBBM_INTERFACE_HANG_INT_CNTL,
-					  (1 << 30) | 0x3FFFF);
+					  (1 << 30) | 0xFFFF);
 	}
 
 
@@ -1935,6 +1936,18 @@ static void a5xx_start(struct adreno_device *adreno_dev)
 			kgsl_regrmw(device, A5XX_PC_DBG_ECO_CNTL, 0, (1 << 8));
 	}
 
+	if (ADRENO_QUIRK(adreno_dev, ADRENO_QUIRK_DISABLE_RB_DP2CLOCKGATING)) {
+		/*
+		 * Disable RB sampler datapath DP2 clock gating
+		 * optimization for 1-SP GPU's, by default it is enabled.
+		 */
+		kgsl_regrmw(device, A5XX_RB_DBG_ECO_CNT, 0, (1 << 9));
+	}
+	/*
+	 * Disable UCHE global filter as SP can invalidate/flush
+	 * independently
+	 */
+	kgsl_regwrite(device, A5XX_UCHE_MODE_CNTL, BIT(29));
 	/* Set the USE_RETENTION_FLOPS chicken bit */
 	kgsl_regwrite(device, A5XX_CP_CHICKEN_DBG, 0x02000000);
 
@@ -2449,7 +2462,7 @@ static int _load_firmware(struct kgsl_device *device, const char *fwfile,
 	}
 
 	ret = kgsl_allocate_global(device, ucode, fw->size - 4,
-				KGSL_MEMFLAGS_GPUREADONLY, 0);
+				KGSL_MEMFLAGS_GPUREADONLY, 0, "ucode");
 
 	if (ret)
 		goto done;
@@ -3169,7 +3182,6 @@ static void a5xx_irq_storm_worker(struct work_struct *work)
 	mutex_unlock(&device->mutex);
 
 	/* Reschedule just to make sure everything retires */
-	kgsl_schedule_work(&device->event_work);
 	adreno_dispatcher_schedule(device);
 }
 
@@ -3220,8 +3232,6 @@ static void a5xx_cp_callback(struct adreno_device *adreno_dev, int bit)
 	}
 
 	a5xx_preemption_trigger(adreno_dev);
-
-	kgsl_schedule_work(&device->event_work);
 	adreno_dispatcher_schedule(device);
 }
 

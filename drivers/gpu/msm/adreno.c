@@ -1,4 +1,4 @@
-/* Copyright (c) 2002,2007-2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2002,2007-2016, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -579,7 +579,6 @@ void adreno_cp_callback(struct adreno_device *adreno_dev, int bit)
 {
 	struct kgsl_device *device = KGSL_DEVICE(adreno_dev);
 
-	kgsl_schedule_work(&device->event_work);
 	adreno_dispatcher_schedule(device);
 }
 
@@ -591,9 +590,6 @@ static irqreturn_t adreno_irq_handler(struct kgsl_device *device)
 	irqreturn_t ret = IRQ_NONE;
 	unsigned int status = 0, tmp, int_bit;
 	int i;
-
-	atomic_inc(&adreno_dev->pending_irq_refcnt);
-	smp_mb__after_atomic();
 
 	adreno_readreg(adreno_dev, ADRENO_REG_RBBM_INT_0_STATUS, &status);
 
@@ -632,10 +628,6 @@ static irqreturn_t adreno_irq_handler(struct kgsl_device *device)
 	if (status & int_bit)
 		adreno_writereg(adreno_dev, ADRENO_REG_RBBM_INT_CLEAR_CMD,
 				int_bit);
-
-	smp_mb__before_atomic();
-	atomic_dec(&adreno_dev->pending_irq_refcnt);
-	smp_mb__after_atomic();
 
 	return ret;
 
@@ -848,6 +840,8 @@ static struct {
 	 { ADRENO_QUIRK_IOMMU_SYNC, "qcom,gpu-quirk-iommu-sync" },
 	 { ADRENO_QUIRK_CRITICAL_PACKETS, "qcom,gpu-quirk-critical-packets" },
 	 { ADRENO_QUIRK_FAULT_DETECT_MASK, "qcom,gpu-quirk-fault-detect-mask" },
+	 { ADRENO_QUIRK_DISABLE_RB_DP2CLOCKGATING,
+			"qcom,gpu-quirk-dp2clockgating-disable" },
 };
 
 static int adreno_of_get_power(struct adreno_device *adreno_dev,
@@ -1217,7 +1211,8 @@ static int adreno_init(struct kgsl_device *device)
 
 	if (!adreno_is_a3xx(adreno_dev)) {
 		int r = kgsl_allocate_global(device,
-			&adreno_dev->cmdbatch_profile_buffer, PAGE_SIZE, 0, 0);
+			&adreno_dev->cmdbatch_profile_buffer, PAGE_SIZE,
+			0, 0, "alwayson");
 
 		adreno_dev->cmdbatch_profile_index = 0;
 
@@ -1785,6 +1780,30 @@ static int adreno_getproperty(struct kgsl_device *device,
 			status = 0;
 		}
 		break;
+	case KGSL_PROP_DEVICE_QDSS_STM:
+		{
+			struct kgsl_qdss_stm_prop qdssprop = {0};
+			struct kgsl_memdesc *qdss_desc =
+				kgsl_mmu_get_qdss_global_entry(device);
+
+			if (sizebytes != sizeof(qdssprop)) {
+				status = -EINVAL;
+				break;
+			}
+
+			if (qdss_desc) {
+				qdssprop.gpuaddr = qdss_desc->gpuaddr;
+				qdssprop.size = qdss_desc->size;
+			}
+
+			if (copy_to_user(value, &qdssprop,
+						sizeof(qdssprop))) {
+				status = -EFAULT;
+				break;
+			}
+			status = 0;
+		}
+		break;
 	case KGSL_PROP_MMU_ENABLE:
 		{
 			/* Report MMU only if we can handle paged memory */
@@ -1810,16 +1829,6 @@ static int adreno_getproperty(struct kgsl_device *device,
 				break;
 			}
 			if (copy_to_user(value, &int_waits, sizeof(int))) {
-				status = -EFAULT;
-				break;
-			}
-			status = 0;
-		}
-		break;
-	case KGSL_PROP_UNKNOWN:
-		{
-			int val = 0;
-			if (copy_to_user(value, &val, sizeof(int))) {
 				status = -EFAULT;
 				break;
 			}
@@ -2060,7 +2069,7 @@ static int adreno_setproperty(struct kgsl_device_private *dev_priv,
 							KGSL_STATE_ACTIVE);
 				device->pwrctrl.ctrl_flags = KGSL_PWR_ON;
 				adreno_fault_detect_stop(adreno_dev);
-				kgsl_pwrscale_disable(device);
+				kgsl_pwrscale_disable(device, true);
 			}
 
 			mutex_unlock(&device->mutex);
@@ -2112,18 +2121,7 @@ inline unsigned int adreno_irq_pending(struct adreno_device *adreno_dev)
 
 	adreno_readreg(adreno_dev, ADRENO_REG_RBBM_INT_0_STATUS, &status);
 
-	/*
-	 * IRQ handler clears the RBBM INT0 status register immediately
-	 * entering the ISR before actually serving the interrupt because
-	 * of this we can't rely only on RBBM INT0 status only.
-	 * Use pending_irq_refcnt along with RBBM INT0 to correctly
-	 * determine whether any IRQ is pending or not.
-	 */
-	if ((status & gpudev->irq->mask) ||
-		atomic_read(&adreno_dev->pending_irq_refcnt))
-		return 1;
-	else
-		return 0;
+	return (status & gpudev->irq->mask) ? 1 : 0;
 }
 
 
@@ -2795,6 +2793,18 @@ static void adreno_regulator_disable_poll(struct kgsl_device *device)
 	adreno_iommu_sync(device, false);
 }
 
+static void adreno_gpu_model(struct kgsl_device *device, char *str,
+				size_t bufsz)
+{
+	struct adreno_device *adreno_dev = ADRENO_DEVICE(device);
+
+	snprintf(str, bufsz, "Adreno%d%d%dv%d",
+			ADRENO_CHIPID_CORE(adreno_dev->chipid),
+			 ADRENO_CHIPID_MAJOR(adreno_dev->chipid),
+			 ADRENO_CHIPID_MINOR(adreno_dev->chipid),
+			 ADRENO_CHIPID_PATCH(adreno_dev->chipid) + 1);
+}
+
 static const struct kgsl_functable adreno_functable = {
 	/* Mandatory functions */
 	.regread = adreno_regread,
@@ -2831,6 +2841,7 @@ static const struct kgsl_functable adreno_functable = {
 	.regulator_disable = adreno_regulator_disable,
 	.pwrlevel_change_settings = adreno_pwrlevel_change_settings,
 	.regulator_disable_poll = adreno_regulator_disable_poll,
+	.gpu_model = adreno_gpu_model,
 };
 
 static struct platform_driver adreno_platform_driver = {
