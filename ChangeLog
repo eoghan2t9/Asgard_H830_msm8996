@@ -1,0 +1,212 @@
+6bbd38613d4a (HEAD -> master, origin/master, origin/HEAD) Regen Defconfig
+6270c5b470eb Regen Defconfig
+9c8027ebc351 android: binder: fix type mismatch warning
+f0bd012d35db ANDROID: binder: fix transaction leak.
+68e1c07d15c8 ANDROID: binder: Add tracing for binder priority inheritance.
+f42b631022b2 Linux 3.18.73
+c7b5da218b46 fix xen_swiotlb_dma_mmap prototype
+3f41bf72c168 swiotlb-xen: implement xen_swiotlb_dma_mmap callback
+2287afd3ccd9 video: fbdev: aty: do not leak uninitialized padding in clk to userspace
+4fddef44f6ad x86/fpu: Don't let userspace set bogus xcomp_bv
+fd7ee3a2b97c btrfs: prevent to set invalid default subvolid
+6f165453a041 PCI: Fix race condition with driver_override
+fee803f90611 kvm: nVMX: Don't allow L2 to access the hardware CR8
+e0fad41a6aa5 arm64: Make sure SPsel is always set
+832b10d6076d bsg-lib: don't free job in bsg_prepare_job
+9067ee45b586 nl80211: check for the required netlink attributes presence
+a843749a7581 vfs: Return -ENXIO for negative SEEK_HOLE / SEEK_DATA offsets
+44da5f944bd8 SMB3: Don't ignore O_SYNC/O_DSYNC and O_DIRECT flags
+92e3ed96e96c SMB: Validate negotiate (to protect against downgrade) even if signing off
+49ecce789f20 powerpc/pseries: Fix parent_dn reference leak in add_dt_node()
+c4f6ae7c5bdd KEYS: prevent KEYCTL_READ on negative key
+3a0bcee9bcb3 KEYS: prevent creating a different user's keyrings
+bb755ebecc2f KEYS: fix writing past end of user-supplied buffer in keyring_read()
+ebe459dc1d30 crypto: talitos - fix sha224
+44fa1c5be8e5 scsi: scsi_transport_iscsi: fix the issue that iscsi_if_rx doesn't parse nlmsg properly
+5736201ccf71 tracing: Erase irqsoff trace with empty write
+fe1940f7d6f0 tracing: Fix trace_pipe behavior for instance traces
+de0c98fcf0f1 KVM: PPC: Book3S: Fix race and leak in kvm_vm_ioctl_create_spapr_tce()
+10087f512ad4 mac80211: flush hw_roc_start work before cancelling the ROC
+5a75a16655c3 cifs: release auth_key.response for reconnect.
+bf0316f3b35f cifs: release cifs root_cred after exit_cifs
+9eb91142a22d Add More wakelocks and regen defconfig
+bd0eebca9cec boeffla_wl_blocker: wakelock blocker driver v1.1.0
+224eacab66c4 Revert wakelock setting staging for boeffla_wl_blocker
+f6965ccce0dd FROMLIST: binder: fix use-after-free in binder_transaction() (from https://patchwork.kernel.org/patch/9978801/)
+a6214c1d05f2 msm: mdss: fix memcpy source and dest memory buffer size mismatch
+c2b9e425edcd msm: mdss: fix race condition during mdp debugfs release
+55a9fac4da6d msm: mdss: fix race condition in mdp debugfs
+f121492677f8 msm: mdss: Fix invalid dma attachment during fb shutdown
+6ccbe6e3cc7a msm: mdss: Add lock to avoid release of active session in rotator
+62e61af53feb msm: mdss: Clear compat structures before copying to user
+37e92e7fe3e8 msm: mdss: Add sanity check for Gamut LUT size
+c80c49f9d169 msm: mdss: handle synchronization issues during DSI debugfs read/write
+769147acdf8d trace: resolve stack corruption due to string copy
+d28b70541bee Revert "ANDROID: ion: Protect kref from userspace manipulation"
+6c8b7fab9d7c Fix build error
+cd053d05d411 ANDROID: ion: Protect kref from userspace manipulation
+59fce819db35 splice: introduce FMODE_SPLICE_READ and FMODE_SPLICE_WRITE
+5263dff7df36 ping: implement proper locking
+a8f9699693b0 Move Adreno Drivers To Correct Folder
+c74e85369528 Update Adreno Drivers
+05712b47aa3b Version 6.3
+017c0da765da Fix compiler errors
+3cb8620d4d37 Regen Defconfig
+6848f19a0e04 fs: avoid adding non-thread-group task to LMK rbtree To maintain the task adj RB tree, we add a task to the RB tree when fork, and delete it when exit. The place is exactly the same as the linear p->tasks list, say, nly when the task is thread_group_leader.
+40f0afd9038b kernel: avoid adding non-thread-group task to LMK rbtree To maintain the task adj RB tree, we add a task to the RB tree when fork, and delete it when exit. The place is exactly the same as the linear p->tasks list, only when the task is thread_group_leader.
+794f78422494 fs: support task's adj rbtree Add (or del) a task to (or from) task's adj rbtree when its oom_score_adj is modified.
+bfcd789b80fd lowmemorykiller: maintain LMK rbtree with signal->adj_node Currently, we maintain LMK rbtree with task->adj_node. However, when handling oom_score_adj change case, we may del/add a non-leader task to the RB tree, which is not as expected.
+c73110fa4980 drivers:lmk: Fix null pointer issue On some race, the tsk that lmk is using may be deleted from the RB tree by other thread, and rb_next would return a NULL if we use this tsk to get next. For this case, we need to skip this round of shrink and wait for the next turn. Otherwise, tsk would trigger NULL pointer panic.
+e42c914cf721 kernel: support task's adj rbtree Add (or del) a task to (or from) task's adj rbtree when a task is created or exit.
+8432639223bc drivers:lmk: Fix double delete issue someone may change a process's oom_score_adj by proc fs, even though the process has exited. In that case, the task was deleted from the rb tree already, and the redundant deleting would trigger rb_erase panic finally.
+1e5b1fa60204 staging:android:lmk: read rb tree root with spinlock there is racing condition: after reading rb tree root, it might be changed by other tasks before adding new node. it can lead to rb tree corruption. This patch is to avoid this race condition.
+71e5ba71e449 lowmemorykiller: implement task's adj rbtree Based on the current LMK implementation, LMK has to scan all processes to select the correct task to kill during low memory.
+bb3e3c5d2f62 lib: lz4: cleanup unaligned access efficiency detection
+2793d4a5994f UKSM: Fix compile error
+0692b7e5bef1 uksm: remove warning
+3d170dd89f1d UKSM: parameter moved to include/linuc/kernel.h
+c194041770e2 MM UKSM: set default sleep ms to 1000 + define
+d48688145486  Tune UKSM to work with Android Devices
+3615361bd707 uksm: fix compiling
+d2e7e151bd3b uskm: changes for UKSM and disabled by default
+0e23bb20fcd8 uksm: add V1.2.3
+406a3d28a38f Fix build errors with Zen Tune disabled
+a220185dc252 Net: IPV6: Fix Build Errors
+ae19bde7aa94 Linux 3.18.72
+8982b70cf7ea bcache: fix bch_hprint crash and improve output
+2cff317b0bf8 bcache: fix for gc and write-back race
+a31feb371193 bcache: Correct return value for sysfs attach errors
+8258d0e43c6a bcache: correct cache_dirty_target in __update_writeback_rate()
+29b1f762998e bcache: Fix leak of bdev reference
+44b5793a73a0 bcache: initialize dirty stripes in flash_dev_run()
+7c1f5e4a170e media: uvcvideo: Prevent heap overflow when accessing mapped controls
+ecbc73bc5340 media: v4l2-compat-ioctl32: Fix timespec conversion
+8769cd180328 PCI: shpchp: Enable bridge bus mastering if MSI is enabled
+63f326621f56 ARC: Re-enable MMU upon Machine Check exception
+cd5e2840d065 tracing: Apply trace_clock changes to instance max buffer
+4a3e7d22d7c3 ftrace: Fix selftest goto location on error
+177341edd548 scsi: qla2xxx: Fix an integer overflow in sysfs code
+d99e4776a73c scsi: sg: fixup infoleak when using SG_GET_REQUEST_TABLE
+4317f684d7c7 scsi: sg: factor out sg_fill_request_table()
+c36263c4d947 scsi: sg: off by one in sg_ioctl()
+d1e3ed483a38 scsi: sg: use standard lists for sg_requests
+ededf61410cb scsi: sg: remove 'save_scat_len'
+4868d3974c24 scsi: zfcp: trace high part of "new" 64 bit SCSI LUN
+94c1acb8de23 scsi: zfcp: trace HBA FSF response by default on dismiss or timedout late response
+c46d2d93a56a scsi: zfcp: fix payload with full FCP_RSP IU in SCSI trace records
+f02d3e4ee827 scsi: zfcp: fix missing trace records for early returns in TMF eh handlers
+2f381ce4c772 scsi: zfcp: add handling for FCP_RESID_OVER to the fcp ingress path
+dc095d618ee5 scsi: zfcp: fix queuecommand for scsi_eh commands when DIX enabled
+d735d780dad3 skd: Submit requests to firmware before triggering the doorbell
+221cd5463970 skd: Avoid that module unloading triggers a use-after-free
+345652b0a5d0 md/bitmap: disable bitmap_resize for file-backed bitmaps.
+d36333c402f8 block: Relax a check in blk_start_queue()
+6b899ed7e829 powerpc: Fix DAR reporting when alignment handler faults
+a6627ea5cca4 ext4: fix incorrect quotaoff if the quota feature is enabled
+c7d66a4243e1 crypto: AF_ALG - remove SGL terminator indicator when chaining
+8b8be957d503 Input: i8042 - add Gigabyte P57 to the keyboard reset table
+2bba5bcf9c3d ip6_gre: fix endianness errors in ip6gre_err
+f4987a8430aa Revert "usb: musb: fix tx fifo flush handling again"
+9daddc8ecc21 f2fs: check hot_data for roll-forward recovery
+181fe09e6cf1 ipv6: fix typo in fib6_net_exit()
+05175fa49acb ipv6: fix memory leak with multiple tables during netns destruction
+fe56e92f008c tcp: initialize rcv_mss to TCP_MIN_MSS instead of 0
+bf7370504fb6 Revert "net: phy: Correctly process PHY_HALTED in phy_stop_machine()"
+3991a38e1a07 qlge: avoid memcpy buffer overflow
+edcd43867194 ipv6: accept 64k - 1 packet length in ip6_find_1stfragopt()
+344dafc6ab51 proc: Remove additional SafetyNet flags from /proc/cmdline SafetyNet checks androidboot.veritymode in Nougat, so remove it.
+cf71fbed1bd5 Prevent potential double frees in sg driver
+bdd842b90820 soc: qcom: smp2p: spinlock_test: Initialize work item
+ccd733898240 usb: gadget: Clear multi_req flag if UDC suspended
+11e3cca66c5f diag: dci: Add NULL pointer checks for dci buffers
+26b0a6684411 mmc: core: Use PF_MEMALLOC flag for clock scaling context
+4b560fdf112a mmc: sdhci-msm: Set dll to good phase while sending cmd13 in tuning
+92598a484df3 Regen
+7f5f4918502b Revert "Revert "Remove old binder files""
+fc3921268cb4 Revert "Revert "Force update binder and move out of staging""
+86988f8d9ac4 Regen
+582d26ed6cd6 Revert "Force update binder and move out of staging"
+f8b9121fc33d Revert "Remove old binder files"
+1968ba58afb7 fs: default to noatime
+50f4aaae50fc Revert "Force update camera drivers"
+e15401b28510 Regen Defconfig
+bde315df77b0 Revert "diag: Synchronize msg mask read and write on a peripheral"
+eafb7f29c444 Revert "Small fixes"
+1a36d5b92b50 Small fixes
+05fff15de84e Force update camera drivers
+ea12ab35db83 trace: ipc_logging: Avoid buffer overflow in ipc_log_string()
+afefce64405b diag: Synchronize msg mask read and write on a peripheral
+38957c6c67c5 thermal: tsens: Disable Tsens interrupts during driver initialization
+fa2e62d950f5 ARM: dts: msm: Update temperature threshold limits for EA for 8996
+37c6b3842d38 softirq: defer softirq processing to ksoftirqd if CPU is busy with RT
+e7f0beda1f75 Remove old binder files
+d3cc7074d247 Force update binder and move out of staging
+797e1662fd47 SOUND CODEX: unify define for temp to this driver.
+fe95a20402b7 UPSTREAM: mlx4: include clocksource.h again
+8bdc18482fc5 BACKPORT: e1000e: convert to CYCLECOUNTER_MASK macro.
+dcb88ff8176f UPSTREAM: arm64: dump: Fix implicit inclusion of definition for PCI_IOBASE
+0cfc691c3062 BACKPORT: igb: convert to CYCLECOUNTER_MASK macro.
+1a724a5ee6e6 UPSTREAM: ixgbe: convert to CYCLECOUNTER_MASK macro.
+6d6abd121200 UPSTREAM: arm64: fix missing asm/alternative.h include in kernel/module.c
+9c4b090d69cc UPSTREAM: bnx2x: convert to CYCLECOUNTER_MASK macro.
+76546293b137 UPSTREAM: timecounter: provide a macro to initialize the cyclecounter mask field.
+491db7f660e1 BACKPORT: partial: mm, oom_reaper: do not mmput synchronously from the oom reaper context
+c8b4bdf35d83 UPSTREAM: time: move the timecounter/cyclecounter code into its own file.
+ebe0636abee8 UPSTREAM: arm64: fix missing linux/bug.h include in asm/arch_timer.h
+72414656ef9f UPSTREAM: arm64: fix missing asm/io.h include in kernel/smp_spin_table.c
+de0883d668c6 UPSTREAM: arm64: fix missing asm/pgtable-hwdef.h include in asm/processor.h
+8ab9ae32fd63 msm-core: Add back periodic polling and fix various race conditions
+81f7186eee90 msm-core: Improve sampling conditioning
+7f7145931290 msm-core: Rework resampling processing
+064cbe2f27ef Revert "qcom: msm-core: uninterruptible wait - you can kiss my arse goodbye"
+ec7438344b9c Remove DEFAULT_TEMP from sound temp sewnsor as it included else where.
+75ba29f3b832 msm-core: Fix error handling of sensor data retrieval
+6b5861946958 thermal-core: Fix invalid sensor data being accepted
+0e76e4eb878d Revert "qcom: msm-core: queue work on system_power_efficient_wq"
+f1986f24ec6e Devfreq: queue work on power efficient wq
+8308e3132516 Block: iosched_switcher: queue work on power efficient wq
+86cc700dfffc Make iosched switcher more customizable
+cb19f9041d89 Regen defconfig
+08de478d917e Revert "HID: hiddev: validate num_values for HIDIOCGUSAGES, HIDIOCSUSAGES commands"
+bf3ca7bf26bf Revert "aio: mark AIO pseudo-fs noexec"
+b4fe703284c7 Revert "BACKPORT: aio: mark AIO pseudo-fs noexec"
+ba0d09eac140 Revert "ANDROID: ext4 crypto: Disables zeroing on truncation when there's no key"
+bef8240ed40c fs/exec: fix use after free in execve
+ee354ef3acec merge d_materialise_unique() into d_splice_alias()
+87103ab01274 ANDROID: ext4 crypto: Disables zeroing on truncation when there's no key
+2d45c85ac13e BACKPORT: aio: mark AIO pseudo-fs noexec
+e0cbd87fddd1 aio: mark AIO pseudo-fs noexec
+704d7ef59c2e HID: hiddev: validate num_values for HIDIOCGUSAGES, HIDIOCSUSAGES commands
+7b4da6ac53bf net: llc: use correct size for sysctl timeout entries
+311b6c511538 input: add new input event code to pass timestamp to userspace
+31b9cd72294f UPSTREAM: arm64: vdso: Mark vDSO code as read-only
+f8d06a327ecc UPSTREAM: USB: iowarrior: fix oops with malicious USB descriptors
+f78f2998c2a5 UPSTREAM: USB: usb_driver_claim_interface: add sanity checking
+f2953bfa4564 drivers: video: Add bounds checking in fb_cmap_to_user
+40c5143c90f8 msm: ipa: fix the potential heap overflow on wan-driver
+64f66c218dc8 msm: kgsl: Fix overflow in sharedmem cache range operation function
+b0ee7a1ed9fa ASoC: soc: prevent risk of buffer overflow
+0e38b6081902 net: ping: Fix stack buffer overflow in ping_common_sendmsg()
+9f34717c317f ASoC: qdsp6v2: fix potential bug of infinite loop
+b6615acd00c2 ANDROID: video: adf: Avoid directly referencing user pointers
+10e9fb237ef7 msm: msm_bus: limit max chars read by sscanf
+70a534d00d83 ASoC: msm: q6dspv2: fix potentional information leak
+feab8e232861 binder: blacklist %p kptr_restrict
+6338139e2f20 cgroup: prefer %pK to %p
+5e8b0462b66d misc: qcom: qdsp6v2: initialize config_32
+9d4a6b567811 misc: qcom: qdsp6v2: initialize wma_config_32
+5ffb6c4adb87 ANDROID: trace: net: use %pK for kernel pointers
+185c0c17d28a sched/rt: really force updates rq clock in pick_next_task_rt
+af6e7adadf96 UPSTREAM: all arches, signal: move restart_block to struct task_struct
+add8a5a1a49d lowmemorykiller: account for unevictable pages
+35bbd90f5b8f ion: adjust system heap pool orders
+d5100600bb90 ANDROID: mmc: move to a SCHED_FIFO thread
+c2eaef443e0c sched: avoid migrating when softint on tgt cpu should be short
+8e60a6d2cbe4 sched: avoid scheduling RT threads on cores currently handling softirqs
+7b7baf43e23c sched/rt: Avoid moving rt task if destination CPU does not run low priority task.
+e43387ddd632 Regen Defconfig
+b84b329933da drivers/Kconfig: remove duplicate entry for soc
+63aa02fd87b8 BACKPORT: rcu: Optionally run grace-period kthreads at real-time priority
+1b1f223355ff BACKPORT: rcu: Unify boost and kthread priorities
+d15d8da1c561 BACKPORT: rcu: Move RCU_BOOST variable declarations, eliminating #ifdef
+6462bd5fa2e5 cpu-boost: Rework scheduling setup This patch minimizes the latency of an input boost by creating a dedicated kworker and scheduling it with the realtime policy "SCHED_FIFO". We use "MAX_RT_PRIO - 2" to have the input boost task preempt userspace RT tasks if needed while being preempted by kernel internal RT tasks which are scheduled at "MAX_RT_PRIO - 1" or higher.
