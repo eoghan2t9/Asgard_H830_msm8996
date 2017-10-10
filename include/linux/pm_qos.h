@@ -13,7 +13,6 @@
 #include <linux/interrupt.h>
 
 enum {
-enum {
 	PM_QOS_RESERVED = 0,
 	PM_QOS_CPU_DMA_LATENCY,
 	PM_QOS_NETWORK_LATENCY,
