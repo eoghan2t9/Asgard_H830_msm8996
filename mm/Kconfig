@@ -675,6 +675,7 @@ config ZCACHE
        bool "Compressed cache for file pages (EXPERIMENTAL)"
        depends on CRYPTO && CLEANCACHE
        select CRYPTO_LZO
+       select ZBUD
        default n
        help
          A compressed cache for file pages.
