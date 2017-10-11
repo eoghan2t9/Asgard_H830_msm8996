@@ -555,14 +555,14 @@ static void rqbalance_work_func(struct work_struct *work)
 		break;
 	case DOWN:
 		cpu = get_slowest_cpu_n();
-		if (cpu < nr_cpu_ids)
+		if (cpu < nr_cpu_ids) {
 			up = false;
-		else
+		} else {
 			stop_load_timer();
-
 			queue_delayed_work(rqbalance_wq,
 						 &rqbalance_work, up_delay);
 		break;
+		}
 	case UP:
 		balance = balanced_speed_balance();
 		switch (balance) {

@@ -73,7 +73,7 @@ static inline int cpu_idle_poll(void)
 #ifdef CONFIG_SCHED_IDLE_FORCEPOLL
 		|| __get_cpu_var(idle_force_poll)
 #endif
- +		))
+		))
 		cpu_relax();
 	trace_cpu_idle_rcuidle(PWR_EVENT_EXIT, smp_processor_id());
 	rcu_idle_exit();
