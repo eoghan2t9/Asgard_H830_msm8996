@@ -37,10 +37,10 @@
 #define ASMP_TAG			"AutoSMP:"
 #define ASMP_ENABLED			false
 #define DEFAULT_BOOST_LOCK_DUR		800 * 1000L
-#define DEFAULT_NR_CPUS_BOOSTED		2
-#define DEFAULT_UPDATE_RATE		30
+#define DEFAULT_NR_CPUS_BOOSTED		4
+#define DEFAULT_UPDATE_RATE		10
 #define MIN_INPUT_INTERVAL		150 * 1000L
-#define DEFAULT_MIN_BOOST_FREQ		1728000
+#define DEFAULT_MIN_BOOST_FREQ		1708000
 
 #if DEBUG
 struct asmp_cpudata_t {
@@ -71,7 +71,7 @@ static struct asmp_param_struct {
 } asmp_param = {
 	.delay = DEFAULT_UPDATE_RATE,
 	.max_cpus = NR_CPUS,
-	.min_cpus = 1,
+	.min_cpus = 2,
 	.cpufreq_up = 95,
 	.cpufreq_down = 80,
 	.cycle_up = 1,
@@ -347,9 +347,9 @@ static int hotplug_start(void)
 {
 	int ret = 0;
 
-	asmp_workq =
-		alloc_workqueue("autosmp_wq",
-			WQ_HIGHPRI | WQ_FREEZABLE, 0);
+	asmp_workq = alloc_workqueue("autosmp_wq",
+			    WQ_HIGHPRI | WQ_UNBOUND | WQ_FREEZABLE |
+			    WQ_MEM_RECLAIM, 0);
 	if (!asmp_workq) {
 		pr_err("%s: Failed to allocate hotplug workqueue\n",
 					ASMP_TAG);
