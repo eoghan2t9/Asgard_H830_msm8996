@@ -343,6 +343,8 @@ config ARCH_MSM8994_V1_TLBI_WA
 
 endmenu
 
+source "arch/arm64/hotplug/Kconfig"
+
 menu "Bus support"
 
 config ARM_AMBA
