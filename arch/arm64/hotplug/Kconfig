@@ -19,12 +19,6 @@ config CLUSTER_PLUG
           online, and only activates the little cluster for heavy
           parallel loads
 
-config MSM_HOTPLUG
-        bool "Enable msm-hotplug cpu hotplug driver"
-        default n
-        help
-          A custom based off on qualcomm hotplug driver. Promises great battery life, made by myflux.
-
 config AUTOSMP
 	bool "Multi-core automatic hotplug support"
 	depends on SMP && HOTPLUG_CPU
