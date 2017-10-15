@@ -1,3 +1,12 @@
+menuconfig ARM64_HOTPLUG
+	bool "ARM64 Hotplug Drivers"
+	depends on ARM64
+	help
+	  Say Y here to choose from a selection of cryptographic algorithms
+	  implemented using ARM64 specific CPU Hotplugging.
+
+if ARM64_HOTPLUG
+
 config CLUSTER_PLUG
         bool "Enable cluster-plug cpu hotplug driver"
         default n
@@ -28,4 +37,4 @@ config AUTOSMP
 	help
 	  Automatically hotplugs the multiple cpu cores on and off
 	  based on cpu load and suspend state
-
+endif
