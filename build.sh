@@ -100,7 +100,7 @@ VERSION=6.4
 TOOLCHAIN=$HOME/Android/aarch64-linux-android-6.x
 
 # amount of cpu threads to use in kernel make process
-THREADS=`nproc`
+THREADS=1
 
 ############## SCARY NO-TOUCHY STUFF ###############
 

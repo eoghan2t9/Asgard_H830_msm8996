@@ -25,12 +25,6 @@ config MSM_HOTPLUG
         help
           A custom based off on qualcomm hotplug driver. Promises great battery life, made by myflux.
 
-config THUNDERPLUG_CONTROL
-	bool "Enable plugging down/up of cores using powersuspend"
-	help
-	  This driver uses powersuspend to take down the cpu cores
- 	  on a octa core device.
-
 config AUTOSMP
 	bool "Multi-core automatic hotplug support"
 	depends on SMP && HOTPLUG_CPU
