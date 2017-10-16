@@ -55,7 +55,7 @@ module_param(vote_threshold_up, uint, 0664);
 
 static ktime_t last_action;
 
-static bool active = false;
+static bool active = true;
 static bool big_cluster_enabled = true;
 static bool little_cluster_enabled = true;
 static bool low_power_mode = false;
