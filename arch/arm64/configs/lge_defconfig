@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/arm64 3.18.75 Kernel Configuration
+# Linux/arm64 3.18.76 Kernel Configuration
 #
 CONFIG_ARM64=y
 CONFIG_64BIT=y
@@ -4840,5 +4840,4 @@ CONFIG_QMI_ENCDEC=y
 # CONFIG_STRICT_MEMORY_RWX is not set
 CONFIG_ARM64_HOTPLUG=y
 CONFIG_CLUSTER_PLUG=y
-# CONFIG_MSM_HOTPLUG is not set
 CONFIG_AUTOSMP=y
