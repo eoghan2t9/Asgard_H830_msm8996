@@ -439,14 +439,6 @@ static ssize_t kcal_enable_show(struct device *dev,
 	return count;
 }*/
 
-static ssize_t kcal_invert_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	struct kcal_lut_data *lut_data = dev_get_drvdata(dev);
-
-	return scnprintf(buf, PAGE_SIZE, "%d\n", lut_data->invert);
-}
-
 static ssize_t kcal_sat_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
