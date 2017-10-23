@@ -94,7 +94,7 @@ RDIR=$(pwd)
 KERNELNAME=Asgard-Reborn
 
 # version number
-VERSION=6.4
+VERSION=6.5
 
 # directory containing cross-compile arm64 toolchain
 TOOLCHAIN=$HOME/Android/aarch64-linux-android-6.x
