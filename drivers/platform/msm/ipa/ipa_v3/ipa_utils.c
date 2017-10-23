@@ -828,7 +828,7 @@ int ipa3_cfg_route(struct ipahal_reg_route *route)
  */
 int ipa3_cfg_filter(u32 disable)
 {
-	IPAERR("Filter disable is not supported!\n");
+	IPAERR_RL("Filter disable is not supported!\n");
 	return -EPERM;
 }
 
@@ -902,7 +902,7 @@ u8 ipa3_get_hw_type_index(void)
 int ipa3_get_ep_mapping(enum ipa_client_type client)
 {
 	if (client >= IPA_CLIENT_MAX || client < 0) {
-		IPAERR("Bad client number! client =%d\n", client);
+		IPAERR_RL("Bad client number! client =%d\n", client);
 		return -EINVAL;
 	}
 
@@ -1006,6 +1006,11 @@ enum ipacm_client_enum ipa3_get_client(int pipe_idx)
  */
 bool ipa3_get_client_uplink(int pipe_idx)
 {
+	if (pipe_idx < 0 || pipe_idx >= IPA3_MAX_NUM_PIPES) {
+		IPAERR("invalid pipe idx %d\n", pipe_idx);
+		return false;
+	}
+
 	return ipa3_ctx->ipacm_client[pipe_idx].uplink;
 }
 
@@ -3456,19 +3461,19 @@ int ipa3_write_qmap_id(struct ipa_ioc_write_qmapid *param_in)
 	int result = -EINVAL;
 
 	if (param_in->client  >= IPA_CLIENT_MAX) {
-		IPAERR("bad parm client:%d\n", param_in->client);
+		IPAERR_RL("bad parm client:%d\n", param_in->client);
 		goto fail;
 	}
 
 	ipa_ep_idx = ipa3_get_ep_mapping(param_in->client);
 	if (ipa_ep_idx == -1) {
-		IPAERR("Invalid client.\n");
+		IPAERR_RL("Invalid client.\n");
 		goto fail;
 	}
 
 	ep = &ipa3_ctx->ep[ipa_ep_idx];
 	if (!ep->valid) {
-		IPAERR("EP not allocated.\n");
+		IPAERR_RL("EP not allocated.\n");
 		goto fail;
 	}
 
@@ -3481,7 +3486,7 @@ int ipa3_write_qmap_id(struct ipa_ioc_write_qmapid *param_in)
 		ipa3_ctx->ep[ipa_ep_idx].cfg.meta = meta;
 		result = ipa3_write_qmapid_wdi_pipe(ipa_ep_idx, meta.qmap_id);
 		if (result)
-			IPAERR("qmap_id %d write failed on ep=%d\n",
+			IPAERR_RL("qmap_id %d write failed on ep=%d\n",
 					meta.qmap_id, ipa_ep_idx);
 		result = 0;
 	}
@@ -4270,7 +4275,7 @@ static int ipa3_tag_generate_force_close_desc(struct ipa3_desc desc[],
 			IPAHAL_FULL_PIPELINE_CLEAR;
 		reg_write_agg_close.offset =
 			ipahal_get_reg_ofst(IPA_AGGR_FORCE_CLOSE);
-		ipahal_get_aggr_force_close_valmask(1<<i, &valmask);
+		ipahal_get_aggr_force_close_valmask(i, &valmask);
 		reg_write_agg_close.value = valmask.val;
 		reg_write_agg_close.value_mask = valmask.mask;
 		cmd_pyld = ipahal_construct_imm_cmd(IPA_IMM_CMD_REGISTER_WRITE,
@@ -4530,6 +4535,7 @@ int ipa3_bind_api_controller(enum ipa_hw_type ipa_hw_type,
 	api_ctrl->ipa_disconnect = ipa3_disconnect;
 	api_ctrl->ipa_reset_endpoint = ipa3_reset_endpoint;
 	api_ctrl->ipa_clear_endpoint_delay = ipa3_clear_endpoint_delay;
+	api_ctrl->ipa_disable_endpoint = NULL;
 	api_ctrl->ipa_cfg_ep = ipa3_cfg_ep;
 	api_ctrl->ipa_cfg_ep_nat = ipa3_cfg_ep_nat;
 	api_ctrl->ipa_cfg_ep_hdr = ipa3_cfg_ep_hdr;
@@ -4677,6 +4683,9 @@ int ipa3_bind_api_controller(enum ipa_hw_type ipa_hw_type,
 		ipa3_set_required_perf_profile;
 	api_ctrl->ipa_get_ipc_logbuf = ipa3_get_ipc_logbuf;
 	api_ctrl->ipa_get_ipc_logbuf_low = ipa3_get_ipc_logbuf_low;
+	api_ctrl->ipa_setup_uc_ntn_pipes = ipa3_setup_uc_ntn_pipes;
+	api_ctrl->ipa_tear_down_uc_offload_pipes =
+		ipa3_tear_down_uc_offload_pipes;
 
 	return 0;
 }
@@ -5127,16 +5136,16 @@ int ipa3_generate_eq_from_hw_rule(
 	num_ihl_offset_meq_32 = attrib->num_ihl_offset_meq_32;
 	num_offset_meq_128 = attrib->num_offset_meq_128;
 
-	if (attrib->tos_eq_present)
+	if (attrib->tos_eq_present && extra)
 		attrib->tos_eq = *extra++;
 
-	if (attrib->protocol_eq_present)
+	if (attrib->protocol_eq_present && extra)
 		attrib->protocol_eq = *extra++;
 
-	if (attrib->tc_eq_present)
+	if (attrib->tc_eq_present && extra)
 		attrib->tc_eq = *extra++;
 
-	if (num_offset_meq_128) {
+	if (num_offset_meq_128 && extra) {
 		attrib->offset_meq_128[0].offset = *extra++;
 		for (i = 0; i < 8; i++)
 			attrib->offset_meq_128[0].mask[i] = *rest++;
@@ -5149,7 +5158,7 @@ int ipa3_generate_eq_from_hw_rule(
 		num_offset_meq_128--;
 	}
 
-	if (num_offset_meq_128) {
+	if (num_offset_meq_128 && extra) {
 		attrib->offset_meq_128[1].offset = *extra++;
 		for (i = 0; i < 8; i++)
 			attrib->offset_meq_128[1].mask[i] = *rest++;
@@ -5162,7 +5171,7 @@ int ipa3_generate_eq_from_hw_rule(
 		num_offset_meq_128--;
 	}
 
-	if (num_offset_meq_32) {
+	if (num_offset_meq_32 && extra) {
 		attrib->offset_meq_32[0].offset = *extra++;
 		attrib->offset_meq_32[0].mask = *((u32 *)rest);
 		rest += 4;
@@ -5172,7 +5181,7 @@ int ipa3_generate_eq_from_hw_rule(
 	}
 	IPADBG("buf=0x%p extra=0x%p rest=0x%p\n", buf, extra, rest);
 
-	if (num_offset_meq_32) {
+	if (num_offset_meq_32 && extra) {
 		attrib->offset_meq_32[1].offset = *extra++;
 		attrib->offset_meq_32[1].mask = *((u32 *)rest);
 		rest += 4;
@@ -5182,7 +5191,7 @@ int ipa3_generate_eq_from_hw_rule(
 	}
 	IPADBG("buf=0x%p extra=0x%p rest=0x%p\n", buf, extra, rest);
 
-	if (num_ihl_offset_meq_32) {
+	if (num_ihl_offset_meq_32 && extra) {
 		attrib->ihl_offset_meq_32[0].offset = *extra++;
 		attrib->ihl_offset_meq_32[0].mask = *((u32 *)rest);
 		rest += 4;
@@ -5191,7 +5200,7 @@ int ipa3_generate_eq_from_hw_rule(
 		num_ihl_offset_meq_32--;
 	}
 
-	if (num_ihl_offset_meq_32) {
+	if (num_ihl_offset_meq_32 && extra) {
 		attrib->ihl_offset_meq_32[1].offset = *extra++;
 		attrib->ihl_offset_meq_32[1].mask = *((u32 *)rest);
 		rest += 4;
@@ -5207,7 +5216,7 @@ int ipa3_generate_eq_from_hw_rule(
 		rest += 4;
 	}
 
-	if (num_ihl_offset_range_16) {
+	if (num_ihl_offset_range_16 && extra) {
 		attrib->ihl_offset_range_16[0].offset = *extra++;
 		attrib->ihl_offset_range_16[0].range_high = *((u16 *)rest);
 		rest += 2;
@@ -5215,7 +5224,7 @@ int ipa3_generate_eq_from_hw_rule(
 		rest += 2;
 		num_ihl_offset_range_16--;
 	}
-	if (num_ihl_offset_range_16) {
+	if (num_ihl_offset_range_16 && extra) {
 		attrib->ihl_offset_range_16[1].offset = *extra++;
 		attrib->ihl_offset_range_16[1].range_high = *((u16 *)rest);
 		rest += 2;
@@ -5224,13 +5233,13 @@ int ipa3_generate_eq_from_hw_rule(
 		num_ihl_offset_range_16--;
 	}
 
-	if (attrib->ihl_offset_eq_32_present) {
+	if (attrib->ihl_offset_eq_32_present && extra) {
 		attrib->ihl_offset_eq_32.offset = *extra++;
 		attrib->ihl_offset_eq_32.value = *((u32 *)rest);
 		rest += 4;
 	}
 
-	if (attrib->ihl_offset_eq_16_present) {
+	if (attrib->ihl_offset_eq_16_present && extra) {
 		attrib->ihl_offset_eq_16.offset = *extra++;
 		attrib->ihl_offset_eq_16.value = *((u16 *)rest);
 		rest += 4;
@@ -5258,74 +5267,163 @@ int ipa3_generate_eq_from_hw_rule(
 	return 0;
 }
 
+static int ipa3_load_single_fw(const struct firmware *firmware,
+	const struct elf32_phdr *phdr)
+{
+	uint32_t *fw_mem_base;
+	int index;
+	const uint32_t *elf_data_ptr;
+
+	if (phdr->p_offset > firmware->size) {
+		IPAERR("Invalid ELF: offset=%u is beyond elf_size=%zu\n",
+			phdr->p_offset, firmware->size);
+		return -EINVAL;
+	}
+	if ((firmware->size - phdr->p_offset) < phdr->p_filesz) {
+		IPAERR("Invalid ELF: offset=%u filesz=%u elf_size=%zu\n",
+			phdr->p_offset, phdr->p_filesz, firmware->size);
+		return -EINVAL;
+	}
+
+	if (phdr->p_memsz % sizeof(uint32_t)) {
+		IPAERR("FW mem size %u doesn't align to 32bit\n",
+			phdr->p_memsz);
+		return -EFAULT;
+	}
+
+	if (phdr->p_filesz > phdr->p_memsz) {
+		IPAERR("FW image too big src_size=%u dst_size=%u\n",
+			phdr->p_filesz, phdr->p_memsz);
+		return -EFAULT;
+	}
+
+	fw_mem_base = ioremap(phdr->p_vaddr, phdr->p_memsz);
+	if (!fw_mem_base) {
+		IPAERR("Failed to map 0x%x for the size of %u\n",
+			phdr->p_vaddr, phdr->p_memsz);
+		return -ENOMEM;
+	}
+
+	/* Set the entire region to 0s */
+	memset(fw_mem_base, 0, phdr->p_memsz);
+
+	elf_data_ptr = (uint32_t *)(firmware->data + phdr->p_offset);
+
+	/* Write the FW */
+	for (index = 0; index < phdr->p_filesz/sizeof(uint32_t); index++) {
+		writel_relaxed(*elf_data_ptr, &fw_mem_base[index]);
+		elf_data_ptr++;
+	}
+
+	iounmap(fw_mem_base);
+
+	return 0;
+}
+
 /**
  * ipa3_load_fws() - Load the IPAv3 FWs into IPA&GSI SRAM.
  *
  * @firmware: Structure which contains the FW data from the user space.
+ * @gsi_mem_base: GSI base address
  *
  * Return value: 0 on success, negative otherwise
  *
  */
-int ipa3_load_fws(const struct firmware *firmware)
+int ipa3_load_fws(const struct firmware *firmware, phys_addr_t gsi_mem_base)
 {
 	const struct elf32_hdr *ehdr;
 	const struct elf32_phdr *phdr;
-	const uint8_t *elf_phdr_ptr;
-	uint32_t *elf_data_ptr;
-	int phdr_idx, index;
-	uint32_t *fw_mem_base;
+	unsigned long gsi_iram_ofst;
+	unsigned long gsi_iram_size;
+	phys_addr_t ipa_reg_mem_base;
+	u32 ipa_reg_ofst;
+	int rc;
+
+	if (!gsi_mem_base) {
+		IPAERR("Invalid GSI base address\n");
+		return -EINVAL;
+	}
+
+	ipa_assert_on(!firmware);
+	/* One program header per FW image: GSI, DPS and HPS */
+	if (firmware->size < (sizeof(*ehdr) + 3 * sizeof(*phdr))) {
+		IPAERR("Missing ELF and Program headers firmware size=%zu\n",
+			firmware->size);
+		return -EINVAL;
+	}
 
 	ehdr = (struct elf32_hdr *) firmware->data;
-
-	elf_phdr_ptr = firmware->data + sizeof(*ehdr);
-
-	for (phdr_idx = 0; phdr_idx < ehdr->e_phnum; phdr_idx++) {
-		/*
-		 * The ELF program header will contain the starting
-		 * address to which the firmware needs to copied.
-		 */
-		phdr = (struct elf32_phdr *)elf_phdr_ptr;
-
-		/*
-		 * p_vaddr will contain the starting address to which the
-		 * FW needs to be loaded.
-		 * p_memsz will contain the size of the IRAM.
-		 * p_filesz will contain the size of the FW image.
-		 */
-		fw_mem_base = ioremap(phdr->p_vaddr, phdr->p_memsz);
-		if (!fw_mem_base) {
-			IPAERR("Failed to map 0x%x for the size of %u\n",
-				phdr->p_vaddr, phdr->p_memsz);
-				return -ENOMEM;
-		}
-
-		/* Set the entire region to 0s */
-		memset(fw_mem_base, 0, phdr->p_memsz);
-
-		/*
-		 * p_offset will contain and absolute offset from the beginning
-		 * of the ELF file.
-		 */
-		elf_data_ptr = (uint32_t *)
-				((uint8_t *)firmware->data + phdr->p_offset);
-
-		if (phdr->p_memsz % sizeof(uint32_t)) {
-			IPAERR("FW size %u doesn't align to 32bit\n",
-				phdr->p_memsz);
-			return -EFAULT;
-		}
-
-		/* Write the FW */
-		for (index = 0; index < phdr->p_filesz/sizeof(uint32_t);
-			index++) {
-			writel_relaxed(*elf_data_ptr, &fw_mem_base[index]);
-			elf_data_ptr++;
-		}
-
-		iounmap(fw_mem_base);
-
-		elf_phdr_ptr = elf_phdr_ptr + sizeof(*phdr);
+	ipa_assert_on(!ehdr);
+	if (ehdr->e_phnum != 3) {
+		IPAERR("Unexpected number of ELF program headers\n");
+		return -EINVAL;
 	}
-	IPADBG("IPA FWs (GSI FW, HPS and DPS) were loaded\n");
+	phdr = (struct elf32_phdr *)(firmware->data + sizeof(*ehdr));
+
+	/*
+	 * Each ELF program header represents a FW image and contains:
+	 *  p_vaddr : The starting address to which the FW needs to loaded.
+	 *  p_memsz : The size of the IRAM (where the image loaded)
+	 *  p_filesz: The size of the FW image embedded inside the ELF
+	 *  p_offset: Absolute offset to the image from the head of the ELF
+	 */
+
+	/* Load GSI FW image */
+	gsi_get_inst_ram_offset_and_size(&gsi_iram_ofst, &gsi_iram_size);
+	if (phdr->p_vaddr != (gsi_mem_base + gsi_iram_ofst)) {
+		IPAERR(
+			"Invalid GSI FW img load addr vaddr=0x%x gsi_mem_base=%pa gsi_iram_ofst=0x%lx\n"
+			, phdr->p_vaddr, &gsi_mem_base, gsi_iram_ofst);
+		return -EINVAL;
+	}
+	if (phdr->p_memsz > gsi_iram_size) {
+		IPAERR("Invalid GSI FW img size memsz=%d gsi_iram_size=%lu\n",
+			phdr->p_memsz, gsi_iram_size);
+		return -EINVAL;
+	}
+	rc = ipa3_load_single_fw(firmware, phdr);
+	if (rc)
+		return rc;
+
+	phdr++;
+	ipa_reg_mem_base = ipa3_ctx->ipa_wrapper_base + ipahal_get_reg_base();
+
+	/* Load IPA DPS FW image */
+	ipa_reg_ofst = ipahal_get_reg_ofst(IPA_DPS_SEQUENCER_FIRST);
+	if (phdr->p_vaddr != (ipa_reg_mem_base + ipa_reg_ofst)) {
+		IPAERR(
+			"Invalid IPA DPS img load addr vaddr=0x%x ipa_reg_mem_base=%pa ipa_reg_ofst=%u\n"
+			, phdr->p_vaddr, &ipa_reg_mem_base, ipa_reg_ofst);
+		return -EINVAL;
+	}
+	if (phdr->p_memsz > ipahal_get_dps_img_mem_size()) {
+		IPAERR("Invalid IPA DPS img size memsz=%d dps_mem_size=%u\n",
+			phdr->p_memsz, ipahal_get_dps_img_mem_size());
+		return -EINVAL;
+	}
+	rc = ipa3_load_single_fw(firmware, phdr);
+	if (rc)
+		return rc;
+
+	phdr++;
+
+	/* Load IPA HPS FW image */
+	ipa_reg_ofst = ipahal_get_reg_ofst(IPA_HPS_SEQUENCER_FIRST);
+	if (phdr->p_vaddr != (ipa_reg_mem_base + ipa_reg_ofst)) {
+		IPAERR(
+			"Invalid IPA HPS img load addr vaddr=0x%x ipa_reg_mem_base=%pa ipa_reg_ofst=%u\n"
+			, phdr->p_vaddr, &ipa_reg_mem_base, ipa_reg_ofst);
+		return -EINVAL;
+	}
+	if (phdr->p_memsz > ipahal_get_hps_img_mem_size()) {
+		IPAERR("Invalid IPA HPS img size memsz=%d dps_mem_size=%u\n",
+			phdr->p_memsz, ipahal_get_hps_img_mem_size());
+		return -EINVAL;
+	}
+	rc = ipa3_load_single_fw(firmware, phdr);
+	if (rc)
+		return rc;
+
+	IPADBG("IPA FWs (GSI FW, DPS and HPS) loaded successfully\n");
 	return 0;
 }
