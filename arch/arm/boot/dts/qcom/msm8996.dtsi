@@ -2827,14 +2827,14 @@
 		reg = <0x70000 0x1000>;
 		qcom,sensor-id = <11>;
 		qcom,poll-ms = <100>;
-		qcom,limit-temp = <60>;
-		qcom,temp-hysteresis = <10>;
+		qcom,limit-temp = <70>;
+		qcom,temp-hysteresis = <5>;
 		qcom,therm-reset-temp = <115>;
 		qcom,freq-step = <4>;
-		qcom,core-limit-temp = <70>;
-		qcom,core-temp-hysteresis = <10>;
-		qcom,hotplug-temp = <105>;
-		qcom,hotplug-temp-hysteresis = <40>;
+		qcom,core-limit-temp = <85>;
+		qcom,core-temp-hysteresis = <5>;
+		qcom,hotplug-temp = <115>;
+		qcom,hotplug-temp-hysteresis = <20>;
 		qcom,freq-mitigation-temp = <90>;
 		qcom,freq-mitigation-temp-hysteresis = <40>;
 		qcom,freq-mitigation-value = <576000>;
@@ -2845,7 +2845,8 @@
 
 		qcom,vdd-restriction-temp = <5>;
 		qcom,vdd-restriction-temp-hysteresis = <10>;
-
+		qcom,pmic-sw-mode-temp = <90>;
+		qcom,pmic-sw-mode-temp-hysteresis = <85>;
 		vdd-dig-supply = <&pm8994_s1_floor_corner>;
 		vdd-gfx-supply = <&gfx_vreg>;
 
@@ -2863,7 +2864,7 @@
 
 		msm_thermal_freq: qcom,vdd-apps-rstr{
 			qcom,vdd-rstr-reg = "vdd-apps";
-			qcom,levels = <576000 600000 600000>;
+			qcom,levels = <600000 600000 700000 725000 750000 9600000 960000>;
 			qcom,freq-req;
 		};
 	};
