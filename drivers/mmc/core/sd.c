@@ -1277,6 +1277,7 @@ static int mmc_sd_suspend(struct mmc_host *host)
 {
 	int err;
 
+	MMC_TRACE(host, "%s: Enter\n", __func__);
 	err = _mmc_sd_suspend(host);
 	if (!err) {
 		pm_runtime_disable(&host->card->dev);
@@ -1286,7 +1287,6 @@ static int mmc_sd_suspend(struct mmc_host *host)
 		host->ignore_bus_resume_flags = true;
 
 	MMC_TRACE(host, "%s: Exit err: %d\n", __func__, err);
-
 
 	return err;
 }
