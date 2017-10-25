@@ -177,7 +177,8 @@ BUILD_ANYKERNEL() {
         echo "Finding and adding modules"
         find build/ -name '*.ko' -exec cp -v {} AnyKernel/modules/  \;
         cd AnyKernel/
-        zip -r "$LOCALVERSION".zip anykernel.sh Image.gz-dtb META-INF/ tools/ ramdisk/ modules/ patch/
+        #zip -r "$LOCALVERSION".zip anykernel.sh Image.gz-dtb META-INF/ tools/ ramdisk/ modules/ patch/
+	make
         cd ../
     else 
         echo "File does not exist"
