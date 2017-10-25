@@ -172,17 +172,17 @@ BUILD_ANYKERNEL() {
     rm AnyKernel/modules/*.ko
     file=build/arch/arm64/boot/Image.gz-dtb
     if [ -e "$file" ]; then
-        echo "Finding and adding Image.gz-dtb"
-        find build/ -name 'Image.gz-dtb' -exec cp -v {} AnyKernel/Image.gz-dtb  \;
-        echo "Finding and adding modules"
-        find build/ -name '*.ko' -exec cp -v {} AnyKernel/modules/  \;
-        cd AnyKernel/
-        sed -i "/DEVICE ?=/c\DEVICE ?= $DEVICE" Makefile
-  	make
+	echo "Finding and adding Image.gz-dtb"
+	find build/ -name 'Image.gz-dtb' -exec cp -v {} AnyKernel/Image.gz-dtb  \;
+	echo "Finding and adding modules"
+	find build/ -name '*.ko' -exec cp -v {} AnyKernel/modules/  \;
+	cd AnyKernel/
+	sed -i "/DEVICE ?=/c\DEVICE ?= $DEVICE" Makefile
+	make
 	sed -i "/DEVICE ?= $DEVICE/c\DEVICE ?=" Makefile
         cd ../
     else 
-        echo "File does not exist"
+	echo "File does not exist"
     fi
 }
 
