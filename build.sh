@@ -177,8 +177,9 @@ BUILD_ANYKERNEL() {
         echo "Finding and adding modules"
         find build/ -name '*.ko' -exec cp -v {} AnyKernel/modules/  \;
         cd AnyKernel/
-        #zip -r "$LOCALVERSION".zip anykernel.sh Image.gz-dtb META-INF/ tools/ ramdisk/ modules/ patch/
-	make
+        sed -i "/DEVICE ?=/c\DEVICE ?= $DEVICE" Makefile
+  	make
+	sed -i "/DEVICE ?= $DEVICE/c\DEVICE ?=" Makefile
         cd ../
     else 
         echo "File does not exist"
