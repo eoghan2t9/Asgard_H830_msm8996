@@ -5,10 +5,10 @@
 RDIR=$(pwd)
 
 # directory containing cross-compile arm64 toolchain
-TOOLCHAIN=$HOME/Android/aarch64-linux-android-6.x
+TOOLCHAIN=$HOME/Android/aarch64-cortex_a53-linux-gnueabi
 
 export ARCH=arm64
-export CROSS_COMPILE=$TOOLCHAIN/bin/aarch64-linux-android-
+export CROSS_COMPILE=$TOOLCHAIN/bin/aarch64-cortex_a53-linux-gnueabi-
 
 ABORT() {
 	[ "$1" ] && echo "Error: $*"

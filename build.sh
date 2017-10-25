@@ -97,7 +97,7 @@ KERNELNAME=Asgard-Reborn
 VERSION=6.5
 
 # directory containing cross-compile arm64 toolchain
-TOOLCHAIN=$HOME/Android/aarch64-linux-android-6.x
+TOOLCHAIN=$HOME/Android/aarch64-cortex_a53-linux-gnueabi
 
 # amount of cpu threads to use in kernel make process
 THREADS=`nproc`
@@ -110,7 +110,7 @@ ABORT() {
 }
 
 export ARCH=arm64
-export CROSS_COMPILE=$TOOLCHAIN/bin/aarch64-linux-android-
+export CROSS_COMPILE=$TOOLCHAIN/bin/aarch64-cortex_a53-linux-gnueabi-
 
 [ -x "${CROSS_COMPILE}gcc" ] ||
 ABORT "Unable to find gcc cross-compiler at location: ${CROSS_COMPILE}gcc"
