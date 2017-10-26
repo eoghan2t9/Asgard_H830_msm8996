@@ -110,4 +110,4 @@ tools/gator/daemon/events_xml.h
 /AnyKernel/Image.gz-dtb
 /AnyKernel/modules/*.ko
 /AnyKernel/*.zip
-/AnyKernel/*.sha1
+/AnyKernel/*.md5
