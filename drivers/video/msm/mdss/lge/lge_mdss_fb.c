@@ -36,7 +36,7 @@ void lge_mdss_fb_init(struct msm_fb_data_type *mfd)
 	mfd->bl_level_scaled_ex = -1;
 #endif
 #if defined(CONFIG_LGE_HIGH_LUMINANCE_MODE)
-	mfd->panel_info->hl_mode_on = 0;
+	mfd->panel_info->hl_mode_on = 1;
 #endif
 #if defined(CONFIG_LGE_PP_AD_SUPPORTED)
 	mfd->ad_info.is_ad_on = 0;
