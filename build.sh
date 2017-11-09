@@ -129,7 +129,7 @@ ABORT "Config $DEFCONFIG not found in $ARCH configs!"
 ABORT "Device config $DEVICE_DEFCONFIG not found in $ARCH configs!"
 
 KDIR="$RDIR/build/arch/$ARCH/boot"
-export LOCALVERSION=$KERNELNAME-$TARGET-$DEVICE-v$VERSION
+export LOCALVERSION=$KERNELNAME-$TARGET
 
 CLEAN_BUILD() {
 	echo "Cleaning build..."
@@ -178,10 +178,12 @@ BUILD_ANYKERNEL() {
 	find build/ -name '*.ko' -exec cp -v {} AnyKernel/modules/  \;
 	cd AnyKernel/
 	sed -i "/DEVICE ?=/c\DEVICE ?= $DEVICE" Makefile
-	sed -i "/VERSION ?=/c\VERSION ?= $VERSION" Makefile
+	sed -i "/VERSION ?=/c\VERSION ?= v$VERSION" Makefile
+	sed -i "/NAME ?=/c\NAME ?= $LOCALVERSION" Makefile
 	make
 	sed -i "/DEVICE ?= $DEVICE/c\DEVICE ?=" Makefile
-	sed -i "/VERSION ?= $VERSION/c\VERSION ?=" Makefile
+	sed -i "/VERSION ?= v$VERSION/c\VERSION ?=" Makefile
+	sed -i "/NAME ?= $LOCALVERSION/c\NAME ?=" Makefile
         cd ../
     else 
 	echo "File does not exist"
@@ -196,4 +198,4 @@ BUILD_KERNEL &&
 INSTALL_MODULES &&
 BUILD_ANYKERNEL &&
 
-echo "Finished building $LOCALVERSION!"
+echo "Finished building Asguard Reborn!"
