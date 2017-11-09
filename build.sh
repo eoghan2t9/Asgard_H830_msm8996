@@ -178,8 +178,10 @@ BUILD_ANYKERNEL() {
 	find build/ -name '*.ko' -exec cp -v {} AnyKernel/modules/  \;
 	cd AnyKernel/
 	sed -i "/DEVICE ?=/c\DEVICE ?= $DEVICE" Makefile
+	sed -i "/VERSION ?=/c\VERSION ?= $VERSION" Makefile
 	make
 	sed -i "/DEVICE ?= $DEVICE/c\DEVICE ?=" Makefile
+	sed -i "/VERSION ?= $VERSION/c\VERSION ?=" Makefile
         cd ../
     else 
 	echo "File does not exist"

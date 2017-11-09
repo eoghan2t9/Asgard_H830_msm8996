@@ -1,6 +1,6 @@
 NAME ?= Asgard-Reborn-lge
 DEVICE ?=
-VERSION ?= 6.5
+VERSION ?=
 
 DATE := $(shell date +'%d%m%Y-%H%M')
 
