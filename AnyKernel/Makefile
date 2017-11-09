@@ -2,7 +2,7 @@ NAME ?= Asgard-Reborn-lge
 DEVICE ?=
 VERSION ?= 6.5
 
-DATE := $(shell date +'%Y%m%d-%H%M')
+DATE := $(shell date +'%d%m%Y-%H%M')
 
 ZIP := $(NAME)-$(DEVICE)-$(VERSION)-$(DATE).zip
 
