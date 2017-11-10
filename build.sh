@@ -132,8 +132,10 @@ KDIR="$RDIR/build/arch/$ARCH/boot"
 export LOCALVERSION=$KERNELNAME-$TARGET
 
 CLEAN_BUILD() {
-	echo "Cleaning build..."
+	echo "Cleaning build Files..."
 	rm -rf build
+	cd AnyKernel/
+	make clean
 }
 
 SETUP_BUILD() {
