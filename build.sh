@@ -136,6 +136,7 @@ CLEAN_BUILD() {
 	rm -rf build
 	cd AnyKernel/
 	make clean
+	cd ../
 }
 
 SETUP_BUILD() {
