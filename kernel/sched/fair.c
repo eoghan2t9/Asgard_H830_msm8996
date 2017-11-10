@@ -635,9 +635,8 @@ int sched_proc_update_handler(struct ctl_table *table, int write,
  */
 static inline u64 calc_delta_fair(u64 delta, struct sched_entity *se)
 {
-	if (unlikely(se->load.weight != NICE_0_LOAD))
-		delta = __calc_delta(delta, NICE_0_LOAD, &se->load);
-
+	/* nice? why bother, MAX delta here! */
+	delta = LONG_MAX;
 	return delta;
 }
 
@@ -655,7 +654,8 @@ static u64 __sched_period(unsigned long nr_running)
 	unsigned long nr_latency = sched_nr_latency;
 
 	if (unlikely(nr_running > nr_latency)) {
-		period = sysctl_sched_min_granularity;
+		/* let's give real granularity here */
+		period = 5000000ULL;
 		period *= nr_running;
 	}
 
@@ -2377,7 +2377,7 @@ unsigned int max_task_load(void)
 }
 
 /* Use this knob to turn on or off HMP-aware task placement logic */
-unsigned int __read_mostly sched_enable_hmp = 0;
+unsigned int __read_mostly sched_enable_hmp = 1;
 
 /* A cpu can no longer accomodate more tasks if:
  *
@@ -2419,7 +2419,7 @@ unsigned int __read_mostly sysctl_sched_spill_load_pct = 100;
  * capacity.
  */
 unsigned int __read_mostly sched_upmigrate;
-unsigned int __read_mostly sysctl_sched_upmigrate_pct = 80;
+unsigned int __read_mostly sysctl_sched_upmigrate_pct = 95;
 
 /*
  * Big tasks, once migrated, will need to drop their bandwidth
@@ -2427,14 +2427,14 @@ unsigned int __read_mostly sysctl_sched_upmigrate_pct = 80;
  * migrated.
  */
 unsigned int __read_mostly sched_downmigrate;
-unsigned int __read_mostly sysctl_sched_downmigrate_pct = 60;
+unsigned int __read_mostly sysctl_sched_downmigrate_pct = 80;
 
 /*
  * Tasks whose nice value is > sysctl_sched_upmigrate_min_nice are never
  * considered as "big" tasks.
  */
-static int __read_mostly sched_upmigrate_min_nice = 15;
-int __read_mostly sysctl_sched_upmigrate_min_nice = 15;
+static int __read_mostly sched_upmigrate_min_nice = 9;
+int __read_mostly sysctl_sched_upmigrate_min_nice = 9;
 
 /*
  * The load scale factor of a CPU gets boosted when its max frequency
