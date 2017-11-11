@@ -1385,7 +1385,7 @@ extern int sched_boost(void);
 
 #else /* CONFIG_SCHED_HMP */
 
-#define sched_enable_hmp 1
+#define sched_enable_hmp 0
 #define sched_freq_legacy_mode 1
 #define sched_use_pelt 1
 
