@@ -34,10 +34,10 @@
 static unsigned int min_freq_hardlimit[2] = {0, 0};
 static unsigned int max_freq_hardlimit[2] = {0, 0};
 
-#define CONFIG_MSM_CPU_FREQ_MIN_GROUP1 307200
-#define CONFIG_MSM_CPU_FREQ_MAX_GROUP1 1593600
-#define CONFIG_MSM_CPU_FREQ_MIN_GROUP2 307200
-#define CONFIG_MSM_CPU_FREQ_MAX_GROUP2 2150400
+//#define CONFIG_MSM_CPU_FREQ_MIN_GROUP1 307200
+//#define CONFIG_MSM_CPU_FREQ_MAX_GROUP1 1593600
+//#define CONFIG_MSM_CPU_FREQ_MIN_GROUP2 307200
+//#define CONFIG_MSM_CPU_FREQ_MAX_GROUP2 2150400
 
 #define GOVERNOR_NAME_MAX	16
 static char governor_hard[2][GOVERNOR_NAME_MAX];
@@ -2916,10 +2916,10 @@ int cpufreq_register_driver(struct cpufreq_driver *driver_data)
 	pr_info("driver %s up and running\n", driver_data->name);
 
 	// Initialize min and max scaling freq hard limits
-	min_freq_hardlimit[0] = CONFIG_MSM_CPU_FREQ_MIN_GROUP1;
-	max_freq_hardlimit[0] = CONFIG_MSM_CPU_FREQ_MAX_GROUP1;
-	min_freq_hardlimit[1] = CONFIG_MSM_CPU_FREQ_MIN_GROUP2;
-	max_freq_hardlimit[1] = CONFIG_MSM_CPU_FREQ_MAX_GROUP2;
+	// min_freq_hardlimit[0] = CONFIG_MSM_CPU_FREQ_MIN_GROUP1;
+	// max_freq_hardlimit[0] = CONFIG_MSM_CPU_FREQ_MAX_GROUP1;
+	// min_freq_hardlimit[1] = CONFIG_MSM_CPU_FREQ_MIN_GROUP2;
+	// max_freq_hardlimit[1] = CONFIG_MSM_CPU_FREQ_MAX_GROUP2;
 
 	// Initialize governor hard limits
 	sprintf(governor_hard[0], "%s", "");
