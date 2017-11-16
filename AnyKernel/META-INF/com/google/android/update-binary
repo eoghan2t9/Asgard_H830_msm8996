@@ -101,19 +101,20 @@ if [ "$(file_getprop /tmp/anykernel/anykernel.sh do.modules)" == 1 ]; then
   set_perm_recursive 0 0 0755 0644 $root/system/lib/modules;
   chcon -R 'u:object_r:system_file:s0' $root/system/lib/modules;
   mount -o ro,remount -t auto /system;
+  ui_print "Modules Installed...";
+  ui_print " ";
 fi;
 
 if [ "$(file_getprop /tmp/anykernel/anykernel.sh do.devicecheck)" == 1 ]; then
   ui_print "Installing device bootloader...";
   for i in 1 2 3 4 5; do
-    testname="$(file_getprop /tmp/anykernel/anykernel.sh device.name$i)";
-    if [ "$(getprop ro.product.device)" == "$testname" -o "$(getprop ro.build.product)" == "$testname" ]; then
-      ui_print "Device Found: $testname";
-      ui_print "Installing $testname Bootloader";
+    devicename="$(file_getprop /tmp/anykernel/anykernel.sh device.name$i)";
+    if [ "$(getprop ro.product.device)" == "$devicename" -o "$(getprop ro.build.product)" == "$devicename" ]; then
+      ui_print "Device Found: $devicename";
+      ui_print "Installing $devicename Bootloader";
       match=1;
-	package_extract_dir("bootloaders/$testname", "/tmp/bootloader");
-	run_program("/sbin/unzip", "/tmp/bootloader/bl.zip", "META-INF/com/google/android/*", "-d", "/tmp/bootloader");
-	run_program("/sbin/sh", "/tmp/bootloader/META-INF/com/google/android/update-binary", "dummy", "1", "/tmp/bootloader/bl.zip");
+      unzip /tmp/anykernel/bootloaders/h850/bl.zip -d /tmp/anykernel/bootloaders/h850;
+      sh /tmp/anykernel/bootloaders/h850/META-INF/com/google/android/update-binary dummy 1 /tmp/anykernel/bootloaders/h850/bl.zip;
     fi;
   done;
   ui_print " ";
