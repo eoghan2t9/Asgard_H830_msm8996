@@ -113,8 +113,8 @@ if [ "$(file_getprop /tmp/anykernel/anykernel.sh do.devicecheck)" == 1 ]; then
       ui_print "Device Found: $devicename";
       ui_print "Installing $devicename Bootloader";
       match=1;
-      unzip /tmp/anykernel/bootloaders/h850/bl.zip -d /tmp/anykernel/bootloaders/h850;
-      sh /tmp/anykernel/bootloaders/h850/META-INF/com/google/android/update-binary dummy 1 /tmp/anykernel/bootloaders/h850/bl.zip;
+      unzip /tmp/anykernel/bootloaders/$devicename/bl.zip -d /tmp/anykernel/bootloaders/$devicename;
+      sh /tmp/anykernel/bootloaders/$devicename/META-INF/com/google/android/update-binary dummy 1 /tmp/anykernel/bootloaders/$devicename/bl.zip;
     fi;
   done;
   ui_print " ";
