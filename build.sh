@@ -134,9 +134,17 @@ export LOCALVERSION=$KERNELNAME-$TARGET
 CLEAN_BUILD() {
 	echo "Cleaning build Files..."
 	rm -rf build
-	cd AnyKernel/
-	make clean
-	cd ../
+	file=".clean"
+	if [ -f "$file" ]
+	then
+		echo "Cleaning All Kernel Zip Files."
+		cd AnyKernel/
+		make clean
+		cd ../
+	else
+		echo "Cleaning File Not Found Continuing Build."
+	fi
+
 }
 
 SETUP_BUILD() {
