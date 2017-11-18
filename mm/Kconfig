@@ -225,7 +225,7 @@ config SPLIT_PTLOCK_CPUS
 	default "999999" if !MMU
 	default "999999" if ARM && !CPU_CACHE_VIPT
 	default "999999" if PARISC && !PA20
-	default "4"
+	default "999999"
 
 config ARCH_ENABLE_SPLIT_PMD_PTLOCK
 	boolean
@@ -233,7 +233,7 @@ config ARCH_ENABLE_SPLIT_PMD_PTLOCK
 #
 # support for memory balloon
 config MEMORY_BALLOON
-	boolean
+	bool "balloon memory compaction/migration"
 
 #
 # support for memory balloon compaction
