@@ -3,7 +3,7 @@
  * MSM architecture cpufreq driver
  *
  * Copyright (C) 2007 Google, Inc.
- * Copyright (c) 2007-2015, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2007-2016, The Linux Foundation. All rights reserved.
  * Author: Mike A. Chan <mikechan@google.com>
  *
  * This software is licensed under the terms of the GNU General Public
@@ -188,8 +188,8 @@ static int msm_cpufreq_init(struct cpufreq_policy *policy)
 		if (cpu_clk[cpu] == cpu_clk[policy->cpu])
 			cpumask_set_cpu(cpu, policy->cpus);
 
-	if (cpufreq_frequency_table_cpuinfo(policy, table))
-	{
+	ret = cpufreq_table_validate_and_show(policy, table);
+	if (ret) {
 		// AP: set default frequencies to prevent overclocking or underclocking during start
 		if (policy->cpu <= 1)
 		{
@@ -204,6 +204,7 @@ static int msm_cpufreq_init(struct cpufreq_policy *policy)
 		}
 
 		pr_err("cpufreq: failed to get policy min/max\n");
+		return ret;
 	}
 
 	// AP: set default frequencies to prevent overclocking or underclocking during start
@@ -240,7 +241,6 @@ static int msm_cpufreq_init(struct cpufreq_policy *policy)
 	pr_debug("cpufreq: cpu%d init at %d switching to %d\n",
 			policy->cpu, cur_freq, table[index].frequency);
 	policy->cur = table[index].frequency;
-	policy->freq_table = table;
 
 	return 0;
 }
@@ -391,7 +391,7 @@ static struct cpufreq_driver msm_cpufreq_driver = {
 static struct cpufreq_frequency_table *cpufreq_parse_dt(struct device *dev,
 						char *tbl_name, int cpu)
 {
-	int ret, nf, i;
+	int ret, nf, i, j;
 	u32 *data;
 	struct cpufreq_frequency_table *ftbl;
 
@@ -415,6 +415,7 @@ static struct cpufreq_frequency_table *cpufreq_parse_dt(struct device *dev,
 	if (!ftbl)
 		return ERR_PTR(-ENOMEM);
 
+	j = 0;
 	for (i = 0; i < nf; i++) {
 		unsigned long f;
 
@@ -424,22 +425,11 @@ static struct cpufreq_frequency_table *cpufreq_parse_dt(struct device *dev,
 		f /= 1000;
 
 		/*
-		 * Check if this is the last feasible frequency in the table.
-		 *
-		 * The table listing frequencies higher than what the HW can
-		 * support is not an error since the table might be shared
-		 * across CPUs in different speed bins. It's also not
-		 * sufficient to check if the rounded rate is lower than the
-		 * requested rate as it doesn't cover the following example:
-		 *
-		 * Table lists: 2.2 GHz and 2.5 GHz.
-		 * Rounded rate returns: 2.2 GHz and 2.3 GHz.
-		 *
-		 * In this case, we can CPUfreq to use 2.2 GHz and 2.3 GHz
-		 * instead of rejecting the 2.5 GHz table entry.
+		 * Don't repeat frequencies if they round up to the same clock
+		 * frequency.
 		 */
-		if (i > 0 && f <= ftbl[i-1].frequency)
-			break;
+		if (j > 0 && f <= ftbl[j - 1].frequency)
+			continue;
 
 		//Custom max freq
 		if ((cpu < 2 && f > arg_cpu_max_c1) ||
@@ -448,12 +438,13 @@ static struct cpufreq_frequency_table *cpufreq_parse_dt(struct device *dev,
 			break;
 		}
 
-		ftbl[i].driver_data = i;
-		ftbl[i].frequency = f;
+		ftbl[j].driver_data = j;
+		ftbl[j].frequency = f;
+		j++;
 	}
 
-	ftbl[i].driver_data = i;
-	ftbl[i].frequency = CPUFREQ_TABLE_END;
+	ftbl[j].driver_data = j;
+	ftbl[j].frequency = CPUFREQ_TABLE_END;
 
 	devm_kfree(dev, data);
 
