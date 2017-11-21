@@ -133,12 +133,13 @@ irqreturn_t hw_vsync_handler(int irq, void *data)
 		return IRQ_HANDLED;
 	}
 
-	if (pstatus_data)
-		mod_delayed_work(system_wq, &pstatus_data->check_status,
-			msecs_to_jiffies(interval));
-	else
+	if (!ps_data) {
 		pr_err("Pstatus data is NULL\n");
+		return IRQ_HANDLED;
+	}
 
+	mod_delayed_work(system_wq, &ps_data->check_status,
+			msecs_to_jiffies(interval));
 	queue_work(system_highpri_wq, &ps_data->irq_done);
 
 	return IRQ_HANDLED;
