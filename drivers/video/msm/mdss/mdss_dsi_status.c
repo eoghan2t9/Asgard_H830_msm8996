@@ -133,6 +133,10 @@ irqreturn_t hw_vsync_handler(int irq, void *data)
 		return IRQ_HANDLED;
 	}
 
+	spin_lock_irqsave(&pstatus_init_lock, flags);
+	ps_data = pstatus_data;
+	spin_unlock_irqrestore(&pstatus_init_lock, flags);
+
 	if (!ps_data) {
 		pr_err("Pstatus data is NULL\n");
 		return IRQ_HANDLED;
