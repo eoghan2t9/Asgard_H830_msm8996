@@ -24,6 +24,7 @@
 #include <linux/mman.h>
 #include <linux/nodemask.h>
 #include <linux/memblock.h>
+#include <linux/stop_machine.h>
 #include <linux/fs.h>
 #include <linux/io.h>
 #include <linux/dma-contiguous.h>
@@ -792,6 +793,44 @@ void setup_mm_for_reboot(void)
 	cpu_switch_mm(idmap_pg_dir, &init_mm);
 	flush_tlb_all();
 }
+
+#ifdef CONFIG_MEMORY_HOTPLUG
+
+/*
+ * hotplug_paging() is used by memory hotplug to build new page tables
+ * for hot added memory.
+ */
+
+struct mem_range {
+	phys_addr_t base;
+	phys_addr_t size;
+};
+
+static int __hotplug_paging(void *data)
+{
+	int flags = 0;
+	struct mem_range *section = data;
+
+	if (debug_pagealloc_enabled())
+		flags = NO_BLOCK_MAPPINGS | NO_CONT_MAPPINGS;
+
+	__create_pgd_mapping(swapper_pg_dir, section->base,
+			__phys_to_virt(section->base), section->size,
+			PAGE_KERNEL, pgd_pgtable_alloc, flags);
+
+	return 0;
+}
+
+inline void hotplug_paging(phys_addr_t start, phys_addr_t size)
+{
+	struct mem_range section = {
+		.base = start,
+		.size = size,
+	};
+
+	stop_machine(__hotplug_paging, &section, NULL);
+}
+#endif /* CONFIG_MEMORY_HOTPLUG */
 
 /*
  * Check whether a kernel address is valid (derived from arch/x86/).
