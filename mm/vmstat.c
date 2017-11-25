@@ -859,6 +859,8 @@ const char * const vmstat_text[] = {
 #ifdef CONFIG_COMPACTION
 	"compact_migrate_scanned",
 	"compact_free_scanned",
+	"compact_free_list_alloc",
+	"compact_free_list_skip",
 	"compact_isolated",
 	"compact_stall",
 	"compact_fail",
