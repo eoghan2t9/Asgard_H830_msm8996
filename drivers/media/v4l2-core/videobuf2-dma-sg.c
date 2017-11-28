@@ -151,12 +151,7 @@ static void vb2_dma_sg_put(void *buf_priv)
 		sg_free_table(&buf->sg_table);
 		while (--i >= 0)
 			__free_page(buf->pages[i]);
-<<<<<<< HEAD
-		kfree(buf->pages);
-=======
 		kvfree(buf->pages);
-		put_device(buf->dev);
->>>>>>> 06cfea5f04fc... CHROMIUM: [media] v4l2-core: Use kvmalloc() for potentially big allocations
 		kfree(buf);
 	}
 }
