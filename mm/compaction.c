@@ -986,20 +986,14 @@ static struct page *compaction_alloc(struct page *migratepage,
 {
 	struct compact_control *cc = (struct compact_control *)data;
 	struct page *freepage;
-	int queued;
 
 	/*
 	 * Isolate free pages if necessary, and if we are not aborting due to
 	 * contention.
 	 */
 	if (list_empty(&cc->freepages)) {
-		if (!cc->contended) {
-			queued = alloc_pages_compact(cc->zone, &cc->freepages,
-				cc->nr_migratepages,
-				(cc->migrate_pfn - 1) >> pageblock_order);
-			cc->nr_freepages += queued;
-			map_pages(&cc->freepages);
-		}
+		if (!cc->contended)
+			isolate_freepages(cc);
 
 		if (list_empty(&cc->freepages))
 			return NULL;
