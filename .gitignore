@@ -111,4 +111,3 @@ tools/gator/daemon/events_xml.h
 /AnyKernel/modules/*.ko
 /AnyKernel/*.zip
 /AnyKernel/*.md5
-net/wireguard/
