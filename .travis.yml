@@ -1,0 +1,11 @@
+language: c
+
+before_install:
+- sudo apt-get -qq update
+- sudo apt-get install git-core gnupg flex bison gperf build-essential gcc-multilib g++-multilib
+
+before_script:
+- git clone "https://github.com/djb77/aarch64-cortex_a53-linux-gnueabi" -b gcc-6 "$HOME/Android/aarch64-cortex_a53-linux-gnueabi"
+
+script:
+- ./build.sh h850
