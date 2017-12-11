@@ -100,7 +100,7 @@ VERSION=7.0
 TOOLCHAIN=$HOME/Android/aarch64-cortex_a53-linux-gnueabi
 
 # amount of cpu threads to use in kernel make process
-THREADS=1
+THREADS=`nproc`
 
 ############## SCARY NO-TOUCHY STUFF ###############
 
