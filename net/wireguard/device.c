@@ -1,7 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0
- *
- * Copyright (C) 2015-2017 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.
- */
+/* Copyright (C) 2015-2017 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved. */
 
 #include "queueing.h"
 #include "socket.h"
@@ -67,7 +64,7 @@ static int open(struct net_device *dev)
 	return 0;
 }
 
-#if defined(CONFIG_PM_SLEEP) && !defined(CONFIG_ANDROID)
+#ifdef CONFIG_PM_SLEEP
 static int pm_notification(struct notifier_block *nb, unsigned long action, void *data)
 {
 	struct wireguard_device *wg;
@@ -105,7 +102,6 @@ static int stop(struct net_device *dev)
 		timers_stop(peer);
 		noise_handshake_clear(&peer->handshake);
 		noise_keypairs_clear(&peer->keypairs);
-		peer->last_sent_handshake = get_jiffies_64() - REKEY_TIMEOUT - HZ;
 	}
 	mutex_unlock(&wg->device_update_lock);
 	skb_queue_purge(&wg->incoming_handshakes);
@@ -379,7 +375,7 @@ int __init device_init(void)
 {
 	int ret;
 
-#if defined(CONFIG_PM_SLEEP) && !defined(CONFIG_ANDROID)
+#ifdef CONFIG_PM_SLEEP
 	ret = register_pm_notifier(&pm_notifier);
 	if (ret)
 		return ret;
@@ -398,7 +394,7 @@ int __init device_init(void)
 error_netdevice:
 	unregister_netdevice_notifier(&netdevice_notifier);
 error_pm:
-#if defined(CONFIG_PM_SLEEP) && !defined(CONFIG_ANDROID)
+#ifdef CONFIG_PM_SLEEP
 	unregister_pm_notifier(&pm_notifier);
 #endif
 	return ret;
@@ -408,7 +404,7 @@ void device_uninit(void)
 {
 	rtnl_link_unregister(&link_ops);
 	unregister_netdevice_notifier(&netdevice_notifier);
-#if defined(CONFIG_PM_SLEEP) && !defined(CONFIG_ANDROID)
+#ifdef CONFIG_PM_SLEEP
 	unregister_pm_notifier(&pm_notifier);
 #endif
 	rcu_barrier_bh();

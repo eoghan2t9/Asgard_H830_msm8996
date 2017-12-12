@@ -1,7 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0
- *
- * Copyright (C) 2015-2017 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.
- */
+/* Copyright (C) 2015-2017 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved. */
 
 #include "netlink.h"
 #include "device.h"
@@ -501,12 +498,12 @@ __ro_after_init = {
 	.netnsok = true
 };
 
-int __init genetlink_init(void)
+int __init netlink_init(void)
 {
 	return genl_register_family(&genl_family);
 }
 
-void __exit genetlink_uninit(void)
+void __exit netlink_uninit(void)
 {
 	genl_unregister_family(&genl_family);
 }
