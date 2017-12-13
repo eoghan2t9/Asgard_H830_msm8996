@@ -8,6 +8,7 @@ kernel.string=Asgard Reborn
 do.devicecheck=1
 do.modules=1
 do.cleanup=1
+do.wireguard=1
 do.cleanuponabort=0
 device.name1=h830
 device.name2=h850
