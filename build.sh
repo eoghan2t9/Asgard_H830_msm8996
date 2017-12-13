@@ -94,7 +94,7 @@ RDIR=$(pwd)
 KERNELNAME=Asgard-Reborn
 
 # version number
-VERSION=7.0
+VERSION=7.1
 
 # directory containing cross-compile arm64 toolchain
 TOOLCHAIN=$HOME/Android/aarch64-cortex_a53-linux-gnueabi
