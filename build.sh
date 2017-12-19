@@ -188,8 +188,6 @@ BUILD_ANYKERNEL() {
 	echo "Finding and adding modules"
 	find build/ -name '*.ko' -exec cp -v {} AnyKernel/modules/  \;
 	cd AnyKernel/
-	echo "Downloading Lastest Wireguard Binarys"
-	wget -O wireguard/wg.zip https://data.zx2c4.com/android-wireguard-tools-flashable.zip
 	sed -i "/DEVICE ?=/c\DEVICE ?= $DEVICE" Makefile
 	sed -i "/VERSION ?=/c\VERSION ?= v$VERSION" Makefile
 	sed -i "/NAME ?=/c\NAME ?= $LOCALVERSION" Makefile

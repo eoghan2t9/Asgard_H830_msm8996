@@ -10,7 +10,7 @@ all: $(ZIP)
 
 $(ZIP):
 	@echo "Creating ZIP"
-	@zip -r9 "$@" anykernel.sh bootloaders/`echo "$(DEVICE)"`/bl.zip Image.gz-dtb META-INF modules patch ramdisk tools wireguard
+	@zip -r9 "$@" anykernel.sh bootloaders/`echo "$(DEVICE)"`/bl.zip Image.gz-dtb META-INF modules patch ramdisk tools
 	@md5sum "$@" > "$@.md5" >> /dev/null
 	@echo "Done."
 	@echo "  _|_|                                                            _|      _|_|_|              _|                                      "
