@@ -123,18 +123,6 @@ if [ "$(file_getprop /tmp/anykernel/anykernel.sh do.devicecheck)" == 1 ]; then
   fi;
 fi;
 
-if [ "$(file_getprop /tmp/anykernel/anykernel.sh do.wireguard)" == 1 ]; then
-  ui_print " ";
-  ui_print "Installing Wireguard VPN Binarys...";
-  mount -o rw,remount -t auto /system;
-  mkdir /tmp/anykernel/wireguard/wg
-  unzip /tmp/anykernel/wireguard/wg.zip -d /tmp/anykernel/wireguard/wg;
-  sh /tmp/anykernel/wireguard/wg/META-INF/com/google/android/update-binary dummy 1 /tmp/anykernel/wireguard/wg.zip;
-  mount -o ro,remount -t auto /system;
-  ui_print "Wireguard Installed...";
-  ui_print " ";
-fi;
-
 debugging;
 
 if [ "$(file_getprop /tmp/anykernel/anykernel.sh do.cleanup)" == 1 ]; then
